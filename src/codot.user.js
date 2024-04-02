@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.0.1
+// @version      0.0.2
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -20,7 +20,6 @@
 // ==/UserScript==
 
 (function() {
-    console.info("Tampermoneky fired up on " + window.location);
     'use strict';
     var $ = window.jQuery;
     const JQUERYUI_CSS_URL = '//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/themes/dark-hive/jquery-ui.min.css';
@@ -76,17 +75,26 @@ ul.snippetsList {
 
         let noisesTimer = undefined;
         let getMessagesReq = getCodotServiceRequestBase('/halp');
+        let { onabort } = getMessagesReq;
+
+        getMessagesReq.onabort = function() { clearInterval(noisesTimer); onabort(); };
+        getMessagesReq.onerror = function(resp) {
+            clearInterval(noisesTimer);
+            let msg = "I am sorry, something bad happened, I am unable to help you.";
+            if(resp?.error)
+                msg += '\n\n' + resp.error;
+            f({reply: msg });
+        };
+
         getMessagesReq.data = JSON.stringify({ userId, testOutput });
         getMessagesReq.onreadystatechange = function(resp){
             if (resp.readyState !== 4) return;
             clearInterval(noisesTimer);
             const msgResp = resp.response;
-
             if(!msgResp?.message) {
-                console.info("no messages: " + JSON.stringify(msgResp));
+                f({reply: "I got no response from the server, I think something went wrong."});
                 return;
             }
-
             let message = msgResp.message;
             f({reply: message });
         };
@@ -200,7 +208,7 @@ ul.snippetsList {
                             return;
                         }
                         GM_setValue("codot.userid", userId);
-                        let testOutput = jQuery('div.run-results__result-items')[0].innerText;
+                        let testOutput = jQuery('div.run-output__body')[0].innerText;
 
                         dialog.dialog('option', 'buttons', [
                             {
@@ -243,7 +251,6 @@ ul.snippetsList {
     function registerCodot(lnk) {
 
         jQuery(lnk).on("click", lnk, function() {
-            console.info("Clicked: " + lnk.id);
             let pathElems = window.location.pathname.split('/');
             let kataId =pathElems[2];
             let editors = jQuery('#code').find('div.CodeMirror');
@@ -252,14 +259,12 @@ ul.snippetsList {
             let language = pathElems[4];
 
             let registerData = { kataId, userId, userCode, language };
-            console.info(JSON.stringify(registerData));
 
             let req = getCodotServiceRequestBase('/train');
             req.data = JSON.stringify(registerData);
             req.onreadystatechange = function(resp) {
                 if (resp.readyState !== 4) return;
                 const codotResp = resp.response;
-                console.info('Register training: ' + JSON.stringify(codotResp));
             };
             GM_xmlhttpRequest(req);
         });
@@ -277,11 +282,12 @@ ul.snippetsList {
         jQuery('#codotButton').remove();
     });
 
-    $(document).arrive("span.failed", {existing: false, onceOnly: false}, function(elem) {
+    $(document).arrive("span.failed, span.errors", {existing: false, onceOnly: false }, function(elem) {
         let text = elem.innerText;
-        if(!text.startsWith("Failed:"))
+        if(!['Failed:', 'Errors:', 'Exit Code:'].some(lbl => text.startsWith(lbl)))
             return;
-        console.info("arrived");
+        if(document.getElementById("codotButton"))
+            return;
         buildCodotTrigger(elem);
     });
 

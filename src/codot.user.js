@@ -4,8 +4,8 @@
 // @version      0.0.1
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
-// @updateURL
-// @downloadURL
+// @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
+// @downloadURL  https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
 // @match        https://cr.codewars.com/*
 // @match        https://www.codewars.com/kata/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=codewars.com

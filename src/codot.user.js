@@ -8,6 +8,7 @@
 // @downloadURL  https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
 // @match        https://cr.codewars.com/*
 // @match        https://www.codewars.com/kata/*
+// @match        https://www.codewars.com/users/edit
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=codewars.com
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
@@ -49,8 +50,8 @@ ul.snippetsList {
     function fetchAborted() {
         console.info("Fetch aborted.", "info");
     }
-    function fetchError() {
-        console.info("ERROR!", "error");
+    function fetchError(resp) {
+        console.info("ERROR!:\n" + JSON.stringify(resp));
     }
 
     function getCodotServiceHeadersBase() {
@@ -296,7 +297,7 @@ ul.snippetsList {
             registerCodot(elem);
         });
     });
-    $(document).arrive("h1.page-title", {existing: false, onceOnly: false}, function(elem) {
+    $(document).arrive("h1.page-title", {existing: true, onceOnly: false}, function(elem) {
         let text = elem.innerText;
         if(text != "Account Settings")
             return;

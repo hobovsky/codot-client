@@ -1,18 +1,14 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.0.2
+// @version      0.0.3
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
 // @downloadURL  https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
-// @match        https://cr.codewars.com/*
 // @match        https://www.codewars.com/kata/*
-// @match        https://www.codewars.com/users/edit
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=codewars.com
 // @grant        GM_xmlhttpRequest
-// @grant        GM_getValue
-// @grant        GM_setValue
 // @connect      localhost
 // @connect      codot-server.fly.dev
 // @require      http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js
@@ -72,7 +68,7 @@ ul.snippetsList {
         }
     }
 
-    function askCodot({ userId, testOutput }, f) {
+    function askCodot(testRun, f) {
 
         let noisesTimer = undefined;
         let getMessagesReq = getCodotServiceRequestBase('/halp');
@@ -87,17 +83,28 @@ ul.snippetsList {
             f({reply: msg });
         };
 
-        getMessagesReq.data = JSON.stringify({ userId, testOutput });
+        getMessagesReq.data = JSON.stringify(testRun);
         getMessagesReq.onreadystatechange = function(resp){
             if (resp.readyState !== 4) return;
             clearInterval(noisesTimer);
-            const msgResp = resp.response;
-            if(!msgResp?.message) {
+
+            if (resp.status == 429) {
+                f({reply: `You have to wait.\n${resp.response?.message ?? ""}`});
+                return;
+            } else if (resp.status == 413) {
+                f({reply: `Ooohhh that's way too much for me!\n${resp.response?.message ?? ""}` });
+                return;
+            } else if (resp.status >= 400) {
+                f({reply: `Something went wrong!\n${resp.response?.message ?? ""}`});
+                return;
+            }
+
+            const msgResp = resp.response?.message;
+            if(!msgResp) {
                 f({reply: "I got no response from the server, I think something went wrong."});
                 return;
             }
-            let message = msgResp.message;
-            f({reply: message });
+            f({reply: msgResp });
         };
 
         GM_xmlhttpRequest(getMessagesReq);
@@ -175,26 +182,21 @@ ul.snippetsList {
     const clippyAvatarUrl = 'https://legendary-digital-network-assets.s3.amazonaws.com/wp-content/uploads/2021/07/12220923/Clippy-Featured.jpg';
     const letterRainAvatarUrl = 'https://forum.affinity.serif.com/uploads/monthly_2022_03/matrix.gif.b71b28882682073a8d38210e526655b8.gif';
 
-    function buildCodotDialog(lang, library, editor) {
+    function buildCodotDialog(testRun) {
 
         jQuery('#codotDialog').remove();
-        jQuery('body').append(`
-            <div class='result-type--tree' id='codotDialog' title='Ask Codot'>
+        jQuery('#code_results').append(`
+            <div id='codotDialog' title='Ask Codot'>
                 <img id='avatar' src='${clippyAvatarUrl}' width=200 style='float:left;margin-right: 5px'/>
                 <p>Hi! I noticed that you tried to solve a kata but the tests failed. Do you want me to take a look at your solution?</p>
                 <hr/>
-                <form id='formKataData'>
-                    <div>To be able to help you, I have to know your Codewars user ID.</div>
-                    <div>User ID: <input id='userId' type='text' size=30/></div>
-                    <div>You can find your user ID on your Account Settings page.</div>
-                </form>
                 <div><pre id='codotReply' style='text-wrap:wrap'/></div>
             </div>`);
 
         let dialog = jQuery('#codotDialog').dialog({
             autoOpen: false,
-            height: 400,
-            width: "80%",
+            height: 600,
+            width: 800,
             modal: true,
             resizable: true,
             title: "Ask Codot",
@@ -202,15 +204,6 @@ ul.snippetsList {
                 {
                     text: "Yeah sure!",
                     click: function() {
-                        let userId = jQuery('#userId').val();
-
-                        if(userId == "") {
-                            jQuery('#codotReply').text("I need to know your user ID to help you!");
-                            return;
-                        }
-                        GM_setValue("codot.userid", userId);
-                        let testOutput = jQuery('div.run-output__body')[0].innerText;
-
                         dialog.dialog('option', 'buttons', [
                             {
                                 text: "Yeah sure!",
@@ -221,10 +214,9 @@ ul.snippetsList {
                                 click: function() { dialog.dialog("close"); }
                             }
                         ]);
-                        jQuery('#formKataData').remove();
                         jQuery('#avatar').attr('src', letterRainAvatarUrl);
                         jQuery('#codotReply').text("Let me take a look at your code...");
-                        askCodot({ userId, testOutput }, function(resp) {
+                        askCodot(testRun, function(resp) {
                             jQuery('#codotReply').text("Here's what I found:\n\n" + resp.reply);
                             jQuery('#avatar').attr('src', clippyAvatarUrl);
                             dialog.dialog('option', 'buttons', [
@@ -242,65 +234,56 @@ ul.snippetsList {
                 }
             ]
         });
-
-        let storedUserId = GM_getValue("codot.userid", "");
-        jQuery('#userId').val(storedUserId);
-
         return dialog;
+    }
+
+    let prevToken = "";
+    function awaitResult(resultArrived) {
+        let awaitResultInterval = null;
+
+        awaitResultInterval = setInterval(function() {
+            let runner = App.instance.controller?.outputPanel?.runner;
+            if(!runner)
+                return;
+            let { request, response } = runner;
+            let currentToken = response?.token ?? "";
+            if(currentToken == "" || currentToken == prevToken)
+                return;
+            clearInterval(awaitResultInterval);
+            prevToken = currentToken;
+            resultArrived({ req: request, resp: response });
+        }, 500);
     }
 
     function registerCodot(lnk) {
 
         jQuery(lnk).on("click", lnk, function() {
-            let pathElems = window.location.pathname.split('/');
-            let kataId =pathElems[2];
-            let editors = jQuery('#code').find('div.CodeMirror');
-            let userCode = editors[0].CodeMirror.getValue();
-            let userId = App.instance.currentUser.id;
-            let language = pathElems[4];
+            jQuery('#codotButton').remove();
+            jQuery('#codotDialog').remove();
 
-            let registerData = { kataId, userId, userCode, language };
+            awaitResult(({req, resp}) => {
+                let pathElems = window.location.pathname.split('/');
+                let kataId    = pathElems[2];
+                let userCode  = req.code;
+                let userId    = App.instance.currentUser.id;
+                let language  = req.language;
+                let runnerResponse = resp;
 
-            let req = getCodotServiceRequestBase('/train');
-            req.data = JSON.stringify(registerData);
-            req.onreadystatechange = function(resp) {
-                if (resp.readyState !== 4) return;
-                const codotResp = resp.response;
-            };
-            GM_xmlhttpRequest(req);
+                if(resp.result?.completed)
+                    return;
+
+                jQuery('#code_results').prepend('<a id="codotButton"><img src="https://upload.wikimedia.org/wikipedia/en/d/d8/Windows_11_Clippy_paperclip_emoji.png" width=20 style="float:inline-start"/> I see your tests failed. Do you need help?</a>');
+                let registerData = { kataId, userId, userCode, language, runnerResponse };
+                jQuery('#codotButton').on('click', registerData, function(e) {
+                    buildCodotDialog(e.data).dialog('open');
+                });
+            });
         });
     }
-
-    function buildCodotTrigger(failedMarker) {
-        jQuery('<a id="codotButton"><img src="https://upload.wikimedia.org/wikipedia/en/d/d8/Windows_11_Clippy_paperclip_emoji.png" width=20/></a>').insertAfter(failedMarker);
-        jQuery('#codotButton').on('click', function() {
-            buildCodotDialog().dialog('open');
-        });
-    }
-
-    $(document).arrive('div.run-message', {existing: true, onceOnly: false}, function(elem) {
-        jQuery('#codotDialog').remove();
-        jQuery('#codotButton').remove();
-    });
-
-    $(document).arrive("span.failed, span.errors", {existing: false, onceOnly: false }, function(elem) {
-        let text = elem.innerText;
-        if(!['Failed:', 'Errors:', 'Exit Code:'].some(lbl => text.startsWith(lbl)))
-            return;
-        if(document.getElementById("codotButton"))
-            return;
-        buildCodotTrigger(elem);
-    });
 
     ["#validate_btn", "#attempt_btn", "#submit_btn"].forEach(linkid => {
         $(document).arrive(linkid, {existing: true, onceOnly: false}, function(elem) {
             registerCodot(elem);
         });
-    });
-    $(document).arrive("h1.page-title", {existing: true, onceOnly: false}, function(elem) {
-        let text = elem.innerText;
-        if(text != "Account Settings")
-            return;
-        jQuery('#edit_user').prepend(`<div>Your user id: ${App.instance.currentUser.id}</div>`);
     });
 })();

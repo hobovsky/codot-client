@@ -37,3 +37,7 @@ To minimize spoilers, Codot does not answer questions about kata ranked higher t
 ## Note on Availability
 
 Currently, Codot utilizes my private OpenAI quota and a free hosting service. It's possible that my API quotas could be exhausted at any time, or that my billing plan could run out, or that the service could go down without my notice, or that I may decide to discontinue payment for it. Therefore, there are absolutely no guarantees.
+
+## Disclaimer
+
+The creator of Codot and author of this script is a member of the Codewars moderation team. However, please note that the script provided here is not an official part of the Codewars platform, nor is the author an employee of, nor otherwise officially affiliated with, the organization behind Codewars. This script is an independent project aimed at helping newcomers to avoid newbie mistakes when solving Codewars kata. Any use of this script is at your own discretion, and the author cannot guarantee its accuracy or suitability for your needs. Please use it responsibly and in accordance with Codewars' terms of service.

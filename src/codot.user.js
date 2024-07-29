@@ -52,8 +52,8 @@
 
     function getCodotServiceRequestBase(route) {
         return {
-            // url: 'http://localhost:3000' + route,
-            url: 'https://codot-server.fly.dev' + route,
+            url: 'http://localhost:3000' + route,
+            // url: 'https://codot-server.fly.dev' + route,
             method: 'POST',
             headers: getCodotServiceHeadersBase(),
             responseType: 'json',
@@ -308,6 +308,110 @@
         });
     }
 
+    function sendAuthorReviewRequest(snippets, f) {
+
+        let pathElems = window.location.pathname.split('/');
+        let kataId    = pathElems[2];
+        let language  = pathElems[4] ?? 'unknown';
+        let userId    = App.instance.currentUser.id;
+
+        const req = getCodotServiceRequestBase('/author_review');
+        req.data = JSON.stringify({ snippets, kataId, language, userId });
+        req.onreadystatechange = function(resp){
+            if (resp.readyState !== 4) return;
+
+            if (resp.status == 429) {
+                f({reply: `You have to wait.\n${resp.response?.message ?? ""}`});
+                return;
+            } else if (resp.status == 413) {
+                f({reply: `Ooohhh that's way too much for me!\n${resp.response?.message ?? ""}` });
+                return;
+            } else if (resp.status >= 400) {
+                f({reply: `Something went wrong!\n${resp.response?.message ?? ""}`});
+                return;
+            }
+
+            const reviewMessage = resp.response?.review;
+            if(!reviewMessage) {
+                f({reply: "I got no response from the server, I think something went wrong."});
+                return;
+            }
+            f({reply: reviewMessage });
+        };
+        GM_xmlhttpRequest(req);
+    }
+
+    function showEditorReviewDialog() {
+        const cmDescription = jQuery('#write_descriptionTab .CodeMirror')[0].CodeMirror.getValue();
+        const cmCompleteSolution = jQuery('#code_answer .CodeMirror')[0].CodeMirror.getValue();
+        const cmSolutionStub = jQuery('#code_setup .CodeMirror')[0].CodeMirror.getValue();
+        const cmSubmissionTests = jQuery('#code_fixture .CodeMirror')[0].CodeMirror.getValue();
+        const cmExampleTests = jQuery('#code_example_fixture .CodeMirror')[0].CodeMirror.getValue();
+        const cmPreloaded = jQuery('#code_package .CodeMirror')[0].CodeMirror.getValue();
+
+        const snippets = {
+            description:      cmDescription,
+            completeSolution: cmCompleteSolution,
+            solutionStub:     cmSolutionStub,
+            submissionTests:  cmSubmissionTests,
+            exampleTests:     cmExampleTests,
+            preloaded:        cmPreloaded
+        };
+
+        sendAuthorReviewRequest(snippets, function(e){
+            const { reply } = e;
+            console.info(reply);
+        });
+    }
+
+    function showForkReviewDialog() {
+        const cmDescription = jQuery('#code_snippet_description').parent().find('.CodeMirror')[0].CodeMirror.getValue();
+        const cmCompleteSolution = jQuery('#code_snippet_code_field .CodeMirror')[0].CodeMirror.getValue();
+        const cmSolutionStub = jQuery('#code_snippet_setup_code_field .CodeMirror')[0].CodeMirror.getValue();
+        const cmSubmissionTests = jQuery('#code_snippet_fixture_field .CodeMirror')[0].CodeMirror.getValue();
+        const cmExampleTests = jQuery('#code_snippet_example_fixture_field .CodeMirror')[0].CodeMirror.getValue();
+        const cmPreloaded = jQuery('#code_snippet_package_field .CodeMirror')[0].CodeMirror.getValue();
+
+        const snippets = {
+            description:      cmDescription,
+            completeSolution: cmCompleteSolution,
+            solutionStub:     cmSolutionStub,
+            submissionTests:  cmSubmissionTests,
+            exampleTests:     cmExampleTests,
+            preloaded:        cmPreloaded
+        };
+
+        sendAuthorReviewRequest(snippets, function(e){
+            const { reply } = e;
+            console.info(reply);
+        });
+    }
+
+    function setupEditorReview() {
+        jQuery('#delete').after("<li id='review_author_li'><a id='review_author_a'>🤖 Review</a></li>");
+        jQuery('#review_author_a').on("click", function() {
+            showEditorReviewDialog();
+        });
+    }
+
+    function setupForkReview() {
+
+        let pathElems = window.location.pathname.split('/');
+        let kataId    = pathElems[2];
+        let language  = pathElems[4] ?? 'unknown';
+        let userId    = App.instance.currentUser.id;
+        let what1     = pathElems[1];
+        let what2     = pathElems[3];
+
+        if(what1 != 'kata' || what2 != 'fork')
+            return;
+
+        jQuery('#validate_btn').parent().before("<li class='mr-15px'><a id='review_fork_a' class='btn'>🤖 Review</a></li>");
+        jQuery('#review_fork_a').on("click", function() {
+            showForkReviewDialog();
+        });
+    }
+
     let marker = null;
     $(document).arrive('#description_area', {existing: true, onceOnly: false}, function(elem) {
 
@@ -406,4 +510,14 @@
             jQuery('#codot-review-reply').html(marked.parse(reviewResult.reply));
         });
     });
+
+
+    $(document).arrive('#delete', {existing: true, onceOnly: false}, function(elem) {
+        setupEditorReview();
+    });
+
+    $(document).arrive('#validate_btn', {existing: true, onceOnly: false}, function(elem) {
+        setupForkReview();
+    });
+
 })();

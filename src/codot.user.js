@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.0.4
+// @version      0.0.5
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -351,7 +351,7 @@
       <div id="pnlKatauthor" class='codot_panel'>
         <p>I can review code of your snippets for conformance with Codewars authoring guidelines. Do you want me to try?</p>
         <button id='btnKatauthorReview'>Yeah, go ahead</button>
-        <div id='katauthorReply' class='code_snippet_description is-full-height panel'></div>
+        <div id='katauthorReply' class='markdown prose'></div>
       </div>
     </div>`);
 

@@ -6,7 +6,7 @@
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
 // @downloadURL  https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
-// @match        https://www.codewars.com/kata/*
+// @match        https://www.codewars.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=codewars.com
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
@@ -317,6 +317,7 @@
 
         const req = getCodotServiceRequestBase('/author_review');
         req.data = JSON.stringify({ snippets, kataId, language, userId });
+        console.info(`Req data len: ${req.data.length}`);
         req.onreadystatechange = function(resp){
             if (resp.readyState !== 4) return;
 
@@ -341,50 +342,91 @@
         GM_xmlhttpRequest(req);
     }
 
-    function showEditorReviewDialog() {
-        const cmDescription = jQuery('#write_descriptionTab .CodeMirror')[0].CodeMirror.getValue();
-        const cmCompleteSolution = jQuery('#code_answer .CodeMirror')[0].CodeMirror.getValue();
-        const cmSolutionStub = jQuery('#code_setup .CodeMirror')[0].CodeMirror.getValue();
-        const cmSubmissionTests = jQuery('#code_fixture .CodeMirror')[0].CodeMirror.getValue();
-        const cmExampleTests = jQuery('#code_example_fixture .CodeMirror')[0].CodeMirror.getValue();
-        const cmPreloaded = jQuery('#code_package .CodeMirror')[0].CodeMirror.getValue();
+    function showReviewDialog(fGetSnippets) {
 
-        const snippets = {
-            description:      cmDescription,
-            completeSolution: cmCompleteSolution,
-            solutionStub:     cmSolutionStub,
-            submissionTests:  cmSubmissionTests,
-            exampleTests:     cmExampleTests,
-            preloaded:        cmPreloaded
-        };
+        const dlgId = 'dlgKatauthor';
+        jQuery(`#${dlgId}`).remove();
+        jQuery('body').append(`
+    <div id='${dlgId}' title='Katauthor Review'>
+      <div id="pnlKatauthor" class='codot_panel'>
+        <p>I can review code of your snippets for conformance with Codewars authoring guidelines. Do you want me to try?</p>
+        <button id='btnKatauthorReview'>Yeah, go ahead</button>
+        <div id='katauthorReply' class='code_snippet_description is-full-height panel'></div>
+      </div>
+    </div>`);
 
-        sendAuthorReviewRequest(snippets, function(e){
-            const { reply } = e;
-            console.info(reply);
+        jQuery('#btnKatauthorReview').button().on("click", function() {
+            let helpOutput = jQuery('#katauthorReply');
+            helpOutput.text('');
+            const snippets = fGetSnippets();
+            sendAuthorReviewRequest(snippets, function(e){
+                const { reply } = e;
+                helpOutput.html(marked.parse(reply));
+            });
+            //setTimeout(() => { clearInterval(noisesTimer); f({reply: "This is a faked answer"}); }, 10000);
         });
+        const dlg = jQuery('#' + dlgId).dialog({
+            autoOpen: true,
+            height: 600,
+            width: '80%',
+            modal: true,
+            buttons: [
+                {
+                    text: "Close",
+                    click: function() {
+                        jQuery(this).dialog("close");
+                    }
+                }
+            ]
+        })
+    }
+
+
+    function showEditorReviewDialog() {
+
+        function fGetSnippets() {
+            const cmDescription = jQuery('#write_descriptionTab .CodeMirror')[0].CodeMirror.getValue();
+            const cmCompleteSolution = jQuery('#code_answer .CodeMirror')[0].CodeMirror.getValue();
+            const cmSolutionStub = jQuery('#code_setup .CodeMirror')[0].CodeMirror.getValue();
+            const cmSubmissionTests = jQuery('#code_fixture .CodeMirror')[0].CodeMirror.getValue();
+            const cmExampleTests = jQuery('#code_example_fixture .CodeMirror')[0].CodeMirror.getValue();
+            const cmPreloaded = jQuery('#code_package .CodeMirror')[0].CodeMirror.getValue();
+
+            const snippets = {
+                description:      cmDescription,
+                completeSolution: cmCompleteSolution,
+                solutionStub:     cmSolutionStub,
+                submissionTests:  cmSubmissionTests,
+                exampleTests:     cmExampleTests,
+                preloaded:        cmPreloaded
+            };
+            return snippets;
+        }
+
+        showReviewDialog(fGetSnippets);
     }
 
     function showForkReviewDialog() {
-        const cmDescription = jQuery('#code_snippet_description').parent().find('.CodeMirror')[0].CodeMirror.getValue();
-        const cmCompleteSolution = jQuery('#code_snippet_code_field .CodeMirror')[0].CodeMirror.getValue();
-        const cmSolutionStub = jQuery('#code_snippet_setup_code_field .CodeMirror')[0].CodeMirror.getValue();
-        const cmSubmissionTests = jQuery('#code_snippet_fixture_field .CodeMirror')[0].CodeMirror.getValue();
-        const cmExampleTests = jQuery('#code_snippet_example_fixture_field .CodeMirror')[0].CodeMirror.getValue();
-        const cmPreloaded = jQuery('#code_snippet_package_field .CodeMirror')[0].CodeMirror.getValue();
 
-        const snippets = {
-            description:      cmDescription,
-            completeSolution: cmCompleteSolution,
-            solutionStub:     cmSolutionStub,
-            submissionTests:  cmSubmissionTests,
-            exampleTests:     cmExampleTests,
-            preloaded:        cmPreloaded
-        };
+        function fGetSnippets() {
+            const cmDescription = jQuery('#code_snippet_description').parent().find('.CodeMirror')[0].CodeMirror.getValue();
+            const cmCompleteSolution = jQuery('#code_snippet_code_field .CodeMirror')[0].CodeMirror.getValue();
+            const cmSolutionStub = jQuery('#code_snippet_setup_code_field .CodeMirror')[0].CodeMirror.getValue();
+            const cmSubmissionTests = jQuery('#code_snippet_fixture_field .CodeMirror')[0].CodeMirror.getValue();
+            const cmExampleTests = jQuery('#code_snippet_example_fixture_field .CodeMirror')[0].CodeMirror.getValue();
+            const cmPreloaded = jQuery('#code_snippet_package_field .CodeMirror')[0].CodeMirror.getValue();
 
-        sendAuthorReviewRequest(snippets, function(e){
-            const { reply } = e;
-            console.info(reply);
-        });
+            const snippets = {
+                description:      cmDescription,
+                completeSolution: cmCompleteSolution,
+                solutionStub:     cmSolutionStub,
+                submissionTests:  cmSubmissionTests,
+                exampleTests:     cmExampleTests,
+                preloaded:        cmPreloaded
+            };
+            return snippets;
+        }
+        showReviewDialog(fGetSnippets);
     }
 
     function setupEditorReview() {
@@ -403,7 +445,10 @@
         let what1     = pathElems[1];
         let what2     = pathElems[3];
 
-        if(what1 != 'kata' || what2 != 'fork')
+        let forkedKata = what1 == 'kata' && what2 == 'fork';
+        let forkedTranslation = what1 == 'kumite' && kataId == 'new';
+        console.info(forkedKata + ' ' + forkedTranslation);
+        if(!forkedKata && !forkedTranslation)
             return;
 
         jQuery('#validate_btn').parent().before("<li class='mr-15px'><a id='review_fork_a' class='btn'>🤖 Review</a></li>");

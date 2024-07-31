@@ -312,8 +312,14 @@
 
         let pathElems = window.location.pathname.split('/');
         let kataId    = pathElems[2];
-        let language  = pathElems[4] ?? 'unknown';
         let userId    = App.instance.currentUser.id;
+        let language  = 'unknown';
+
+         if(jQuery('#language_dd').length) {
+             language = jQuery('#language_dd > dl > dd.is-active').data('language');
+         } else if(jQuery('#languages').length) {
+             language = jQuery('#languages > dl > dd.is-active').data('language');
+         }
 
         const req = getCodotServiceRequestBase('/author_review');
         req.data = JSON.stringify({ snippets, kataId, language, userId });
@@ -359,11 +365,17 @@
             let helpOutput = jQuery('#katauthorReply');
             helpOutput.text('');
             const snippets = fGetSnippets();
-            sendAuthorReviewRequest(snippets, function(e){
-                const { reply } = e;
-                helpOutput.html(marked.parse(reply));
-            });
-            //setTimeout(() => { clearInterval(noisesTimer); f({reply: "This is a faked answer"}); }, 10000);
+
+            if(snippets.problem) {
+                helpOutput.text(snippets.problem);
+            } else {
+                helpOutput.text('Please give me some time while I review your code...');
+                sendAuthorReviewRequest(snippets, function(e){
+                    const { reply } = e;
+                    helpOutput.html(marked.parse(reply));
+                });
+                //setTimeout(() => { clearInterval(noisesTimer); f({reply: "This is a faked answer"}); }, 10000);
+            }
         });
         const dlg = jQuery('#' + dlgId).dialog({
             autoOpen: true,
@@ -385,12 +397,12 @@
     function showEditorReviewDialog() {
 
         function fGetSnippets() {
-            const cmDescription = jQuery('#write_descriptionTab .CodeMirror')[0].CodeMirror.getValue();
+            const cmDescription      = jQuery('#write_descriptionTab .CodeMirror')[0].CodeMirror.getValue();
             const cmCompleteSolution = jQuery('#code_answer .CodeMirror')[0].CodeMirror.getValue();
-            const cmSolutionStub = jQuery('#code_setup .CodeMirror')[0].CodeMirror.getValue();
-            const cmSubmissionTests = jQuery('#code_fixture .CodeMirror')[0].CodeMirror.getValue();
-            const cmExampleTests = jQuery('#code_example_fixture .CodeMirror')[0].CodeMirror.getValue();
-            const cmPreloaded = jQuery('#code_package .CodeMirror')[0].CodeMirror.getValue();
+            const cmSolutionStub     = jQuery('#code_setup .CodeMirror')[0].CodeMirror.getValue();
+            const cmSubmissionTests  = jQuery('#code_fixture .CodeMirror')[0].CodeMirror.getValue();
+            const cmExampleTests     = jQuery('#code_example_fixture .CodeMirror')[0].CodeMirror.getValue();
+            const cmPreloaded        = jQuery('#code_package .CodeMirror')[0].CodeMirror.getValue();
 
             const snippets = {
                 description:      cmDescription,
@@ -409,12 +421,17 @@
     function showForkReviewDialog() {
 
         function fGetSnippets() {
-            const cmDescription = jQuery('#code_snippet_description').parent().find('.CodeMirror')[0].CodeMirror.getValue();
+
+            const descriptionEditor = jQuery('#code_snippet_description').parent().find('.CodeMirror')[0];
+            if(!descriptionEditor) {
+                return {problem: 'I cannot read the description. I need to see the description panel to be able to read it. Please make the description panel visible and try again.'};
+            }
+            const cmDescription      = descriptionEditor.CodeMirror.getValue();
             const cmCompleteSolution = jQuery('#code_snippet_code_field .CodeMirror')[0].CodeMirror.getValue();
-            const cmSolutionStub = jQuery('#code_snippet_setup_code_field .CodeMirror')[0].CodeMirror.getValue();
-            const cmSubmissionTests = jQuery('#code_snippet_fixture_field .CodeMirror')[0].CodeMirror.getValue();
-            const cmExampleTests = jQuery('#code_snippet_example_fixture_field .CodeMirror')[0].CodeMirror.getValue();
-            const cmPreloaded = jQuery('#code_snippet_package_field .CodeMirror')[0].CodeMirror.getValue();
+            const cmSolutionStub     = jQuery('#code_snippet_setup_code_field .CodeMirror')[0].CodeMirror.getValue();
+            const cmSubmissionTests  = jQuery('#code_snippet_fixture_field .CodeMirror')[0].CodeMirror.getValue();
+            const cmExampleTests     = jQuery('#code_snippet_example_fixture_field .CodeMirror')[0].CodeMirror.getValue();
+            const cmPreloaded        = jQuery('#code_snippet_package_field .CodeMirror')[0].CodeMirror.getValue();
 
             const snippets = {
                 description:      cmDescription,

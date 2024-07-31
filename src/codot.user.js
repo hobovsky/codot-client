@@ -322,8 +322,13 @@
          }
 
         const req = getCodotServiceRequestBase('/author_review');
+        req.onerror = function(resp) {
+            let msg = "I am sorry, something bad happened, I am unable to help you.";
+            if(resp?.error)
+                msg += '\n\n' + resp.error;
+            f({reply: msg});
+        };
         req.data = JSON.stringify({ snippets, kataId, language, userId });
-        console.info(`Req data len: ${req.data.length}`);
         req.onreadystatechange = function(resp){
             if (resp.readyState !== 4) return;
 
@@ -356,6 +361,7 @@
     <div id='${dlgId}' title='Katauthor Review'>
       <div id="pnlKatauthor" class='codot_panel'>
         <p>I can review code of your snippets for conformance with Codewars authoring guidelines. Do you want me to try?</p>
+        <p style='color: orange'>NOTE: kata reviews are experimental and reported remarks can be inaccurate. It is strongly recommended to consult them with documentation or Codewars community.</p>
         <button id='btnKatauthorReview'>Yeah, go ahead</button>
         <div id='katauthorReply' class='markdown prose'></div>
       </div>
@@ -464,7 +470,6 @@
 
         let forkedKata = what1 == 'kata' && what2 == 'fork';
         let forkedTranslation = what1 == 'kumite' && kataId == 'new';
-        console.info(forkedKata + ' ' + forkedTranslation);
         if(!forkedKata && !forkedTranslation)
             return;
 

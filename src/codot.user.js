@@ -10,6 +10,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=codewars.com
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
+// @grant        GM_setClipboard
 // @connect      localhost
 // @connect      codot-server.fly.dev
 // @require      http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js
@@ -379,6 +380,10 @@
                 sendAuthorReviewRequest(snippets, function(e){
                     const { reply } = e;
                     helpOutput.html(marked.parse(reply));
+                    helpOutput.after('<button id="katauthor-copy-markdown">Copy as markdown to clipboard</button>');
+                    jQuery('#katauthor-copy-markdown').button().on("click", function() {
+                        GM_setClipboard(reply, "text");
+                    });
                 });
                 //setTimeout(() => { clearInterval(noisesTimer); f({reply: "This is a faked answer"}); }, 10000);
             }

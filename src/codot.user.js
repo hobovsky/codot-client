@@ -1,15 +1,16 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.0.4
+// @version      0.0.5
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
 // @downloadURL  https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
-// @match        https://www.codewars.com/kata/*
+// @match        https://www.codewars.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=codewars.com
 // @grant        GM_xmlhttpRequest
 // @grant        GM_addStyle
+// @grant        GM_setClipboard
 // @connect      localhost
 // @connect      codot-server.fly.dev
 // @require      http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js
@@ -308,6 +309,181 @@
         });
     }
 
+    function sendAuthorReviewRequest(snippets, f) {
+
+        let pathElems = window.location.pathname.split('/');
+        let kataId    = pathElems[2];
+        let userId    = App.instance.currentUser.id;
+        let language  = 'unknown';
+
+         if(jQuery('#language_dd').length) {
+             language = jQuery('#language_dd > dl > dd.is-active').data('language');
+         } else if(jQuery('#languages').length) {
+             language = jQuery('#languages > dl > dd.is-active').data('language');
+         }
+
+        const req = getCodotServiceRequestBase('/author_review');
+        req.onerror = function(resp) {
+            let msg = "I am sorry, something bad happened, I am unable to help you.";
+            if(resp?.error)
+                msg += '\n\n' + resp.error;
+            f({reply: msg});
+        };
+        req.data = JSON.stringify({ snippets, kataId, language, userId });
+        req.onreadystatechange = function(resp){
+            if (resp.readyState !== 4) return;
+
+            if (resp.status == 429) {
+                f({reply: `You have to wait.\n${resp.response?.message ?? ""}`});
+                return;
+            } else if (resp.status == 413) {
+                f({reply: `Ooohhh that's way too much for me!\n${resp.response?.message ?? ""}` });
+                return;
+            } else if (resp.status >= 400) {
+                f({reply: `Something went wrong!\n${resp.response?.message ?? ""}`});
+                return;
+            }
+
+            const reviewMessage = resp.response?.review;
+            if(!reviewMessage) {
+                f({reply: "I got no response from the server, I think something went wrong."});
+                return;
+            }
+            f({reply: reviewMessage });
+        };
+        GM_xmlhttpRequest(req);
+    }
+
+    function showReviewDialog(fGetSnippets) {
+
+        const dlgId = 'dlgKatauthor';
+        jQuery(`#${dlgId}`).remove();
+        jQuery('body').append(`
+    <div id='${dlgId}' title='Katauthor Review'>
+      <div id="pnlKatauthor" class='codot_panel'>
+        <p>I can review code of your snippets for conformance with Codewars authoring guidelines. Do you want me to try?</p>
+        <p style='color: orange'>NOTE: kata reviews are experimental and reported remarks can be inaccurate. It is strongly recommended to consult them with documentation or Codewars community.</p>
+        <button id='btnKatauthorReview'>Yeah, go ahead</button>
+        <div id='katauthorReply' class='markdown prose'></div>
+      </div>
+    </div>`);
+
+        jQuery('#btnKatauthorReview').button().on("click", function() {
+            let helpOutput = jQuery('#katauthorReply');
+            helpOutput.text('');
+            const snippets = fGetSnippets();
+
+            if(snippets.problem) {
+                helpOutput.text(snippets.problem);
+            } else {
+                helpOutput.text('Please give me some time while I review your code...');
+                sendAuthorReviewRequest(snippets, function(e){
+                    const { reply } = e;
+                    helpOutput.html(marked.parse(reply));
+                    helpOutput.after('<button id="katauthor-copy-markdown">Copy as markdown to clipboard</button>');
+                    jQuery('#katauthor-copy-markdown').button().on("click", function() {
+                        GM_setClipboard(reply, "text");
+                    });
+                });
+                //setTimeout(() => { clearInterval(noisesTimer); f({reply: "This is a faked answer"}); }, 10000);
+            }
+        });
+        const dlg = jQuery('#' + dlgId).dialog({
+            autoOpen: true,
+            height: 600,
+            width: '80%',
+            modal: true,
+            buttons: [
+                {
+                    text: "Close",
+                    click: function() {
+                        jQuery(this).dialog("close");
+                    }
+                }
+            ]
+        })
+    }
+
+
+    function showEditorReviewDialog() {
+
+        function fGetSnippets() {
+            const cmDescription      = jQuery('#write_descriptionTab .CodeMirror')[0].CodeMirror.getValue();
+            const cmCompleteSolution = jQuery('#code_answer .CodeMirror')[0].CodeMirror.getValue();
+            const cmSolutionStub     = jQuery('#code_setup .CodeMirror')[0].CodeMirror.getValue();
+            const cmSubmissionTests  = jQuery('#code_fixture .CodeMirror')[0].CodeMirror.getValue();
+            const cmExampleTests     = jQuery('#code_example_fixture .CodeMirror')[0].CodeMirror.getValue();
+            const cmPreloaded        = jQuery('#code_package .CodeMirror')[0].CodeMirror.getValue();
+
+            const snippets = {
+                description:      cmDescription,
+                completeSolution: cmCompleteSolution,
+                solutionStub:     cmSolutionStub,
+                submissionTests:  cmSubmissionTests,
+                exampleTests:     cmExampleTests,
+                preloaded:        cmPreloaded
+            };
+            return snippets;
+        }
+
+        showReviewDialog(fGetSnippets);
+    }
+
+    function showForkReviewDialog() {
+
+        function fGetSnippets() {
+
+            const descriptionEditor = jQuery('#code_snippet_description').parent().find('.CodeMirror')[0];
+            if(!descriptionEditor) {
+                return {problem: 'I cannot read the description. I need to see the description panel to be able to read it. Please make the description panel visible and try again.'};
+            }
+            const cmDescription      = descriptionEditor.CodeMirror.getValue();
+            const cmCompleteSolution = jQuery('#code_snippet_code_field .CodeMirror')[0].CodeMirror.getValue();
+            const cmSolutionStub     = jQuery('#code_snippet_setup_code_field .CodeMirror')[0].CodeMirror.getValue();
+            const cmSubmissionTests  = jQuery('#code_snippet_fixture_field .CodeMirror')[0].CodeMirror.getValue();
+            const cmExampleTests     = jQuery('#code_snippet_example_fixture_field .CodeMirror')[0].CodeMirror.getValue();
+            const cmPreloaded        = jQuery('#code_snippet_package_field .CodeMirror')[0].CodeMirror.getValue();
+
+            const snippets = {
+                description:      cmDescription,
+                completeSolution: cmCompleteSolution,
+                solutionStub:     cmSolutionStub,
+                submissionTests:  cmSubmissionTests,
+                exampleTests:     cmExampleTests,
+                preloaded:        cmPreloaded
+            };
+            return snippets;
+        }
+        showReviewDialog(fGetSnippets);
+    }
+
+    function setupEditorReview() {
+        jQuery('#delete').after("<li id='review_author_li'><a id='review_author_a'>🤖 Review</a></li>");
+        jQuery('#review_author_a').on("click", function() {
+            showEditorReviewDialog();
+        });
+    }
+
+    function setupForkReview() {
+
+        let pathElems = window.location.pathname.split('/');
+        let kataId    = pathElems[2];
+        let language  = pathElems[4] ?? 'unknown';
+        let userId    = App.instance.currentUser.id;
+        let what1     = pathElems[1];
+        let what2     = pathElems[3];
+
+        let forkedKata = what1 == 'kata' && what2 == 'fork';
+        let forkedTranslation = what1 == 'kumite' && kataId == 'new';
+        if(!forkedKata && !forkedTranslation)
+            return;
+
+        jQuery('#validate_btn').parent().before("<li class='mr-15px'><a id='review_fork_a' class='btn'>🤖 Review</a></li>");
+        jQuery('#review_fork_a').on("click", function() {
+            showForkReviewDialog();
+        });
+    }
+
     let marker = null;
     $(document).arrive('#description_area', {existing: true, onceOnly: false}, function(elem) {
 
@@ -406,4 +582,14 @@
             jQuery('#codot-review-reply').html(marked.parse(reviewResult.reply));
         });
     });
+
+
+    $(document).arrive('#delete', {existing: true, onceOnly: false}, function(elem) {
+        setupEditorReview();
+    });
+
+    $(document).arrive('#validate_btn', {existing: true, onceOnly: false}, function(elem) {
+        setupForkReview();
+    });
+
 })();

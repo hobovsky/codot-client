@@ -14,6 +14,8 @@ The Codot frontend is a userscript compatible with [Tampermonkey](https://www.ta
 
 Codot offers three functions to support you with solving Codewars kata: help with failed tests, perform a code review, and run code style tools on your solution.
 
+Additionaly, as a functionality in its beta phase, Codot can perform a review of your kata or translations.
+
 ### Help with failed tests
 
 ![feature-help](./images/howto-00.png)
@@ -28,17 +30,26 @@ _**Note:** currently, style checks support only Python and JavaScript code._
 
 Codot can run stylechecks and linters on your solution and report code smells, potential code issues, bugs, and security problems.
 
-### Code reviews
+### Code reviews of solutions
 
-![feature-review](./images/howto-02.png)
+![feature-solution-review](./images/howto-02.png)
 
 Codot can perform reviews of your solution and raise remarks about style, practices, used algorithms, etc.
+
+### Reviews of kata and translations (beta)
+
+![feature-kata-review](./images/howto-03.png)
+
+Codot can perform reviews of your kata and translations for conformance with Codewars quality guidelines.
+
 
 ### Accuracy and effectiveness
 
 Codot is a tool in a very early phase, based on AI utilities, and as such, it is very likely that results produced by it are not accurate, clear, understandable, or even helpful at all. Its prompts and configs still require a lot of fine-tuning to produce more helpful, accurate hints.
 
 Linting feature uses default configs which might not be suitable for code of solutions of Codewars problems. Rulesets can be tuned if the feature will be considered interesting for users.
+
+Reviews for conformance with Codewars quality guidelines are in early beta testing phase. The suggestions are roughly accurate, but should be taken with a grain of salt, and ideally consulted with Codewars community. AI prompts are to be tuned to result in better answers.
 
 ### Limits
 

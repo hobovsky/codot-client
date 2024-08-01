@@ -53,8 +53,8 @@
 
     function getCodotServiceRequestBase(route) {
         return {
-            url: 'http://localhost:3000' + route,
-            // url: 'https://codot-server.fly.dev' + route,
+            // url: 'http://localhost:3000' + route,
+            url: 'https://codot-server.fly.dev' + route,
             method: 'POST',
             headers: getCodotServiceHeadersBase(),
             responseType: 'json',

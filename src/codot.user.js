@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.0.5
+// @version      0.0.6
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -74,54 +74,35 @@
         "This variable has a really cool name!",
         "This line definitely could be improved.",
         "I think this could be a bug.",
-        "This edge case is not handled...",
         "Is this variable unused?",
-        "This function needs more comments.",
         "Inconsistent coding style spotted.",
         "Is this fragment copy/pasted?",
         "This code looks familiar...",
         "This code is not SOLID enough.",
         "This code is not DRY enough.",
         "Is this a global variable?",
-        "This cast is risky.",
         "Did anyone test this?",
-        "Is this loop really necessary?",
         "Are these variable names meaningful enough?",
         "I'm not sure what this function is supposed to do.",
         "Is this error handling sufficient?",
         "Does this function need to be this long?",
         "I'm not entirely clear on the purpose of this block.",
-        "Are these comments explaining enough?",
         "I'm not confident about the logic in this section.",
-        "Is this a global variable?",
         "I'm not entirely sure about this algorithm.",
         "Does this code follow best practices?",
         "I'm not entirely convinced by this design.",
-        "Is this error handling thorough enough?",
         "Are these variables being used correctly?",
-        "I'm not sure about the exception handling here.",
-        "Is there a potential risk of overflow here?",
-        "Are these casts necessary?",
         "I think this code be simplified.",
-        "Shouldn't there be input validation here?",
-        "Could this be optimized?",
         "There must a way to refactor this.",
-        "This code should be more readable.",
-        "Are there memory leaks?",
         "Did anyone even test this?",
         "Is this algorithm overly complex?",
-        "Oh, I think it's an infinite loop?",
-        "Are you sure this is thread safe?",
         "I think this code is not portable.",
-        "Shouldn't there be bounds checking here?",
-        "Comments here are not helpful",
         "Whys is this code so complex?",
         "I'm not entirely sure about the intent of this code.",
         "I'm unsure about the correctness of this logic.",
         "Are the global variables necessary?",
         "Should these variables be more descriptive?",
         "I'm not entirely convinced by the choice of algorithm.",
-        "This will crash on edge cases.",
         "Magic numbers are bad",
         "Uncle Bob would be proud."
     ];
@@ -361,7 +342,12 @@
         jQuery('body').append(`
     <div id='${dlgId}' title='Katauthor Review'>
       <div id="pnlKatauthor" class='codot_panel'>
-        <p>I can review code of your snippets for conformance with Codewars authoring guidelines. Do you want me to try?</p>
+        <p>
+          Before you publish your code, I can review your snippets for conformance with Codewars authoring guidelines.
+          I am just a bot, but my review can help you find the most common mistakes done by unexperienced authors and translators,
+          and save you negative feedback during actual review.
+        </p>
+        <p>Do you want me to try?</p>
         <p style='color: orange'>NOTE: kata reviews are experimental and reported remarks can be inaccurate. It is strongly recommended to consult them with documentation or Codewars community.</p>
         <button id='btnKatauthorReview'>Yeah, go ahead</button>
         <div id='katauthorReply' class='markdown prose'></div>

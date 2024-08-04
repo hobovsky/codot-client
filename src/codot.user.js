@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.0.6
+// @version      0.0.7
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -350,7 +350,7 @@
         <p>Do you want me to try?</p>
         <p style='color: orange'>NOTE: kata reviews are experimental and reported remarks can be inaccurate. It is strongly recommended to consult them with documentation or Codewars community.</p>
         <button id='btnKatauthorReview'>Yeah, go ahead</button>
-        <div id='katauthorReply' class='markdown prose'></div>
+        <div id='katauthorReply' class='markdown prose w-full'></div>
       </div>
     </div>`);
 
@@ -444,7 +444,7 @@
     }
 
     function setupEditorReview() {
-        jQuery('#delete').after("<li id='review_author_li'><a id='review_author_a'>🤖 Review</a></li>");
+        jQuery('#actions').children('ul').first().after("<li id='review_author_li'><a id='review_author_a'>🤖 Review</a></li>");
         jQuery('#review_author_a').on("click", function() {
             showEditorReviewDialog();
         });
@@ -570,7 +570,10 @@
     });
 
 
-    $(document).arrive('#delete', {existing: true, onceOnly: false}, function(elem) {
+    $(document).arrive('h1.page-title', {existing: true, onceOnly: false}, function(elem) {
+        if(elem.textContent != "Kata Editor")
+            return;
+
         setupEditorReview();
     });
 

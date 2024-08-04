@@ -53,7 +53,12 @@ Reviews for conformance with Codewars quality guidelines are in early beta testi
 
 ### Limits
 
-During the initial testing phase, there is a limit of 1 query per minute and a maximum of 5 queries per hour for a single user ID. These limits may be increased after the initial testing phase.
+During the initial testing phase, there are specific limits in place:
+
+- For the **"help"** and **solution review** functions: The limit is 1 query per minute and a maximum of 5 queries per hour for a single user ID.
+- For the **"kata review"** function: The limit is 1 review per 10 minutes and a maximum of 5 reviews per 3 hours for a single user ID.
+
+These limits may be increased after the initial testing phase.
 
 To minimize spoilers, Codot does not help with failed tests for kata ranked higher than 6 kyu or beta kata.
 

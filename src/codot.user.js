@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.0.7
+// @version      0.0.8
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -53,7 +53,7 @@
 
     function getCodotServiceRequestBase(route) {
         return {
-            // url: 'http://localhost:3000' + route,
+            _url: 'http://localhost:3000' + route,
             url: 'https://codot-server.fly.dev' + route,
             method: 'POST',
             headers: getCodotServiceHeadersBase(),
@@ -444,6 +444,10 @@
     }
 
     function setupEditorReview() {
+
+        if (jQuery('#review_author_a').length)
+            return;
+
         jQuery('#actions').children('ul').first().after("<li id='review_author_li'><a id='review_author_a'>🤖 Review</a></li>");
         jQuery('#review_author_a').on("click", function() {
             showEditorReviewDialog();
@@ -451,6 +455,9 @@
     }
 
     function setupForkReview() {
+
+        if (jQuery('#review_fork_a').length)
+            return;
 
         let pathElems = window.location.pathname.split('/');
         let kataId    = pathElems[2];

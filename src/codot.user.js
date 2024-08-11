@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.0.8
+// @version      0.0.9
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -114,7 +114,8 @@
         <div id='codot-help-reply'></div>
         `);
         jQuery('#codot-help').button().on("click", function() {
-            let helpOutput = jQuery('#codot-help-reply')
+            let helpOutput = jQuery('#codot-help-reply');
+            jQuery('#help-copy-markdown').remove();
             helpOutput.text('');
             let runner = App.instance.controller?.outputPanel?.runner;
             if(!runner || !runner.request || !runner.response) {
@@ -357,6 +358,7 @@
         jQuery('#btnKatauthorReview').button().on("click", function() {
             let helpOutput = jQuery('#katauthorReply');
             helpOutput.text('');
+            jQuery('#katauthor-copy-markdown').remove();
             const snippets = fGetSnippets();
 
             if(snippets.problem) {
@@ -526,7 +528,13 @@
         });
 
         setupHelpPanel(function(helpResult) {
-            jQuery('#codot-help-reply').html(marked.parse("Here's what I found:\n\n" + helpResult.reply));
+            let helpOutput = jQuery('#codot-help-reply');
+            let reply = helpResult.reply;
+            helpOutput.html(marked.parse("Here's what I found:\n\n" + reply));
+            helpOutput.after('<button id="help-copy-markdown">Copy as markdown to clipboard</button>');
+            jQuery('#help-copy-markdown').button().on("click", function() {
+                GM_setClipboard(reply, "text");
+            });
         });
 
         setupLinterPanel(function(lintResult) {

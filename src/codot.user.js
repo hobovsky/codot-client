@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.0.9
+// @version      0.1.0
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -288,6 +288,79 @@
                 f({ lintItems });
             };
             GM_xmlhttpRequest(lintReq);
+        });
+    }
+
+    function setupFixPanel(f) {
+        jQuery('#katafix-pnl-fix').append(`
+        <p>I can refactor tests for you. Enter a list of changes you want me to apply:</p>
+        <textarea id='katafix-fixes-input'></textarea>
+        <button id='katafix-fix'>Fix</button>
+        `);
+        jQuery('#katafix-fix').button().on("click", function() {
+            return;
+            let helpOutput = jQuery('#codot-help-reply');
+            jQuery('#help-copy-markdown').remove();
+            helpOutput.text('');
+            let runner = App.instance.controller?.outputPanel?.runner;
+            if(!runner || !runner.request || !runner.response) {
+                f({ reply: "You need to run tests firts!" });
+                return;
+            }
+            let { request, response } = runner;
+            let pathElems = window.location.pathname.split('/');
+            let kataId    = pathElems[2];
+            let userCode  = request.code;
+            let userId    = App.instance.currentUser.id;
+            let language  = request.language;
+            let runnerResponse = response;
+
+            if(response.result?.completed){
+                f({ reply: "All your tests passed! Good job!" });
+                return;
+            }
+
+            let helpReqData = { kataId, userId, userCode, language, runnerResponse };
+            let noisesTimer = undefined;
+            let getHelpReq = getCodotServiceRequestBase('/halp');
+            let { onabort } = getHelpReq;
+            getHelpReq.onabort = function() { clearInterval(noisesTimer); onabort(); };
+            getHelpReq.onerror = function(resp) {
+                clearInterval(noisesTimer);
+                let msg = "I am sorry, something bad happened, I am unable to help you.";
+                if(resp?.error)
+                    msg += '\n\n' + resp.error;
+                f({reply: msg });
+            };
+            getHelpReq.data = JSON.stringify(helpReqData);
+            getHelpReq.onreadystatechange = function(resp){
+                if (resp.readyState !== 4) return;
+                clearInterval(noisesTimer);
+
+                if (resp.status == 429) {
+                    f({reply: `You have to wait.\n${resp.response?.message ?? ""}`});
+                    return;
+                } else if (resp.status == 413) {
+                    f({reply: `Ooohhh that's way too much for me!\n${resp.response?.message ?? ""}` });
+                    return;
+                } else if (resp.status >= 400) {
+                    f({reply: `Something went wrong!\n${resp.response?.message ?? ""}`});
+                    return;
+                }
+
+                const msgResp = resp.response?.message;
+                if(!msgResp) {
+                    f({reply: "I got no response from the server, I think something went wrong."});
+                    return;
+                }
+                f({reply: msgResp });
+            };
+            GM_xmlhttpRequest(getHelpReq);
+            //setTimeout(() => { clearInterval(noisesTimer); f({reply: "This is a faked answer"}); }, 10000);
+            noisesTimer = setInterval(() => {
+                let noise = noises[Math.random() * noises.length | 0];
+                helpOutput.append(`<p>${noise}</p>`);
+            }, 1500);
         });
     }
 
@@ -581,6 +654,62 @@
         });
         setupReviewPanel(function(reviewResult) {
             jQuery('#codot-review-reply').html(marked.parse(reviewResult.reply));
+        });
+    });
+
+    $(document).arrive('#info_area', {existing: true, onceOnly: false}, function(elem) {
+
+        let infoArea = jQuery(elem);
+        let wrapper = jQuery(infoArea.children()[0]);
+        let wrapped = wrapper.children();
+        let tabBar = jQuery(wrapped[0]);
+        let tabContainer = jQuery(jQuery(wrapped[1]).find('ul')[0]);
+
+        let cwButtonDivs = tabBar.children();
+        let cwContentDivs = tabContainer.children();
+        let cwButtonsCount = cwContentDivs.length;
+        let btnHelp = cwButtonDivs.last();
+
+        btnHelp.before('<dd id="katafix-btn-fix" class="mb-15px"><a>🤖 Fix</a><div>');
+
+        tabContainer.append('<li class="is-full-height" data-tab="fix"><div id="katafix-pnl-fix" class="codot_panel prose is-full-height"></div></li>');
+
+        let allButtonDivs  = tabBar.children();
+        let allContentDivs = tabContainer.children();
+        let codotElems = [
+            ["#katafix-btn-fix", "#katafix-pnl-fix"]
+        ];
+
+        codotElems.forEach(([btnid, pnlid]) => {
+            jQuery(btnid).children('a').on("click", function() {
+                allButtonDivs.removeClass("is-active");
+                allContentDivs.removeClass('is-active');
+                // allContentDivs.hide();
+                jQuery(btnid).addClass("is-active");
+                jQuery(pnlid).parent().addClass('is-active');
+                // jQuery(pnlid).show();
+            });
+        });
+
+        cwButtonDivs.children('a').each((idx, btn) => {
+            jQuery(btn).on("click", function() {
+                codotElems.forEach(([btnid, pnlid]) => {
+                    jQuery(btnid).removeClass("is-active");
+                    jQuery(pnlid).removeClass("is-active");
+                    // jQuery(pnlid).hide();
+                });
+            });
+        });
+
+        setupFixPanel(function(fixResult) {
+            // TODO: insert fixed code into editors
+            // let helpOutput = jQuery('#codot-help-reply');
+            // let reply = helpResult.reply;
+            // helpOutput.html(marked.parse("Here's what I found:\n\n" + reply));
+            // helpOutput.after('<button id="help-copy-markdown">Copy as markdown to clipboard</button>');
+            // jQuery('#help-copy-markdown').button().on("click", function() {
+            //     GM_setClipboard(reply, "text");
+            // });
         });
     });
 

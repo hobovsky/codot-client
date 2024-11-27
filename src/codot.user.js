@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.0.9
+// @version      0.1.0
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -34,6 +34,10 @@
     let css = `
     .codot_panel > * {
       margin: 15px
+    }
+
+    hr.katafix-form {
+      margin: 1em
     }
 `;
     GM_addStyle(css);
@@ -291,6 +295,167 @@
         });
     }
 
+    function setupFixPanel(f) {
+
+        let language = jQuery('#languages > dl > dd.is-active').data('language');
+
+        jQuery('#katafix-pnl-fix').append(`
+        <p>I can refactor tests for you. Enter a list of changes you want me to apply:</p>
+        <form method='POST'>
+          <textarea id='katafix-fixes-input' rows='8'></textarea>
+          <table><tr>
+          <td><label for='list_apply_to'>Apply to:</label></td>
+          <td><select id='list_apply_to'>
+            <option value=''>Submission tests</option>
+            <!-- <option value=''>Example tests</option>
+            <option value=''>Complete solution</option>
+            <option value=''>Solution setup</option>
+            <option value=''>Preloaded</option>
+            <option value=''>Description</option> -->
+          </select></td>
+          <td><input type='button' id='katafix-fix' value='Fix'/></td>
+          </tr></table>
+          <hr class='katafix-form'/>
+          <details open><summary>Example fixes</summary>
+              <div id='example_fixes_div'></div>
+          </details>
+          <hr class='katafix-form'/>
+          <details open><summary>Example kata</summary>
+             <!-- <label for='list_example_kata'>Use this kata as an example:</label>
+             <select id='list_example_kata'>
+               <option value='(none)'>(none)</option>
+               <option value='53da3dbb4a5168369a0000fe'>Even or Odd</option>
+               <option value='526c7363236867513f0005ca'>Leap Years</option>
+               <option value='58925dcb71f43f30cd00005f'>Latest Clock</option>
+               <option value='(other)'>Other</option>
+             </select>
+             <label for='example_kata_id'>Kata ID or URL:</label>
+             <input type='text' id='example_kata_id' placeholder='(not selected)' disabled/> -->
+             <label for='example_test_suite'>Use this test suite as an example:</label>
+             <textarea id='example_test_suite' rows='20'></textarea>
+          </details>
+          <hr class='katafix-form'/>
+          <details><summary>Settings</summary>
+            <label for='katafix_key'>Your Katafix key:</label>
+            <input type='password' id='katafix_key'></input>
+          </details>
+        </form>
+        <hr class='katafix-form'/>
+        <div id='katafix-fix-reply'></div>
+        `);
+
+        let exampleFixes = [];
+        switch(language) {
+            case 'javascript':
+                exampleFixes.push("Change custom assertions to Chai's <code>`assert`</code> functions (add necessary `require` if missing).");
+                exampleFixes.push("Set Chai's <code>`config.truncateThreshold`</code> to 0 (add necessary `require` if missing).");
+                exampleFixes.push("Make sure that assertions use failure messages which present a call to solution function with values of inputs.");
+                exampleFixes.push("Make sure all variables are declared with `const` or `let`.");
+                exampleFixes.push("In fixed tests, factor out `it` to a helper function `test_it` which accepts arguments, `expected`, creates an `it` with a title presenting inputs.");
+                exampleFixes.push("Make random tests a single `it` with a loop.");
+                exampleFixes.push("Use Lodash' `_.random` instead of `Math.random`.");
+                break;
+            case 'csharp':
+                exampleFixes.push('Change classic asserions to `Assert.That`.');
+                exampleFixes.push('Add `[Order]` annotations to test methods.');
+                break;
+        }
+
+        const examplesDiv = jQuery('#example_fixes_div');
+        if(exampleFixes.length) {
+          for(const fix of exampleFixes) {
+              examplesDiv.append(`<div class='example_fix border-2 border-solid rounded-xl border-gray-200 m-2 p-1'>${fix}</div>`);
+          }
+        } else {
+            examplesDiv.text(`(No examples for ${language}, sorry!)`);
+        }
+
+        jQuery('.example_fix').on('click', function() {
+            const clickedText = jQuery(this).text();
+            jQuery('#katafix-fixes-input').val(function(index, currentValue) {
+                return currentValue + clickedText + '\n';
+            });
+        });
+/*
+        let cmbExamples = jQuery('#list_example_kata');
+        let txtExampleId = jQuery('#example_kata_id');
+        cmbExamples.on('change', function() {
+            let selected = cmbExamples.val();
+            switch(selected) {
+                case '(none)': {
+                    txtExampleId.val('');
+                    txtExampleId.prop('disabled', true);
+                    break;
+                }
+                case '(other)': {
+                    txtExampleId.prop('disabled', false);
+                    break;
+                }
+                default: {
+                    txtExampleId.val(selected);
+                    txtExampleId.prop('disabled', true);
+                    break;
+                }
+            }
+        });
+*/
+        jQuery('#katafix-fix').button().on("click", function() {
+            let fixMsgOutput = jQuery('#katafix-fix-reply');
+            fixMsgOutput.text('');
+
+            let pathElems     = window.location.pathname.split('/');
+            let kataId        = pathElems[2];
+            let userCode      = jQuery('#code_snippet_fixture_field .CodeMirror')[0].CodeMirror.getValue();
+            let userId        = App.instance.currentUser.id;
+            let fixes         = jQuery('#katafix-fixes-input').val();
+            // let exampleKataId = jQuery('#example_kata_id').val();
+            let exampleCode   = jQuery('#example_test_suite').val();
+            let katafixKey    = jQuery('#katafix_key').val();
+
+            let fixReqData = { kataId, userId, userCode, language, fixes, exampleCode, katafixKey };
+            let noisesTimer = undefined;
+            let fixReq = getCodotServiceRequestBase('/fix');
+            let { onabort } = fixReq;
+            fixReq.onabort = function() { clearInterval(noisesTimer); onabort(); };
+            fixReq.onerror = function(resp) {
+                clearInterval(noisesTimer);
+                let msg = "I am sorry, something bad happened, I am unable to help you.";
+                if(resp?.error)
+                    msg += '\n\n' + resp.error;
+                f({reply: msg });
+            };
+            fixReq.data = JSON.stringify(fixReqData);
+            fixReq.onreadystatechange = function(resp){
+                if (resp.readyState !== 4) return;
+                clearInterval(noisesTimer);
+
+                if (resp.status == 429) {
+                    f({reply: `You have to wait.\n${resp.response?.message ?? ""}`});
+                    return;
+                } else if (resp.status == 413) {
+                    f({reply: `Ooohhh that's way too much for me!\n${resp.response?.message ?? ""}` });
+                    return;
+                } else if (resp.status >= 400) {
+                    f({reply: `Something went wrong!\n${resp.response?.message ?? ""}`});
+                    return;
+                }
+
+                const fixResp = resp.response;
+                if(!fixResp) {
+                    f({reply: "I got no response from the server, I think something went wrong."});
+                    return;
+                }
+                f(fixResp);
+            };
+            GM_xmlhttpRequest(fixReq);
+            //setTimeout(() => { clearInterval(noisesTimer); f({reply: "This is a faked answer"}); }, 10000);
+            noisesTimer = setInterval(() => {
+                let noise = noises[Math.random() * noises.length | 0];
+                fixMsgOutput.append(`<p>${noise}</p>`);
+            }, 1500);
+        });
+    }
+
     function sendAuthorReviewRequest(snippets, f) {
 
         let pathElems = window.location.pathname.split('/');
@@ -391,7 +556,6 @@
             ]
         })
     }
-
 
     function showEditorReviewDialog() {
 
@@ -581,6 +745,59 @@
         });
         setupReviewPanel(function(reviewResult) {
             jQuery('#codot-review-reply').html(marked.parse(reviewResult.reply));
+        });
+    });
+
+    $(document).arrive('#info_area', {existing: true, onceOnly: false}, function(elem) {
+
+        let infoArea = jQuery(elem);
+        let wrapper = jQuery(infoArea.children()[0]);
+        let wrapped = wrapper.children();
+        let tabBar = jQuery(wrapped[0]);
+        let tabContainer = jQuery(jQuery(wrapped[1]).find('ul')[0]);
+
+        let cwButtonDivs = tabBar.children();
+        let cwContentDivs = tabContainer.children();
+        let cwButtonsCount = cwContentDivs.length;
+        let btnHelp = cwButtonDivs.last();
+
+        btnHelp.before('<dd id="katafix-btn-fix" class="mb-15px"><a>🤖 Fix</a><div>');
+        tabContainer.append(`<li class="is-full-height" data-tab="fix"><div id="katafix-pnl-fix" class="codot_panel prose is-full-height p-15px overflow-auto"></div></li>`);
+
+        let allButtonDivs  = tabBar.children();
+        let allContentDivs = tabContainer.children();
+        let codotElems = [
+            ["#katafix-btn-fix", "#katafix-pnl-fix"]
+        ];
+
+        codotElems.forEach(([btnid, pnlid]) => {
+            jQuery(btnid).children('a').on("click", function() {
+                allButtonDivs.removeClass("is-active");
+                allContentDivs.removeClass('is-active');
+                // allContentDivs.hide();
+                jQuery(btnid).addClass("is-active");
+                jQuery(pnlid).parent().addClass('is-active');
+                // jQuery(pnlid).show();
+            });
+        });
+
+        cwButtonDivs.children('a').each((idx, btn) => {
+            jQuery(btn).on("click", function() {
+                codotElems.forEach(([btnid, pnlid]) => {
+                    jQuery(btnid).removeClass("is-active");
+                    jQuery(pnlid).removeClass("is-active");
+                    // jQuery(pnlid).hide();
+                });
+            });
+        });
+
+        setupFixPanel(function(fixResult) {
+            const cmSubmissionTests  = jQuery('#code_snippet_fixture_field .CodeMirror')[0].CodeMirror;
+            if(fixResult.refactoredTests) {
+                cmSubmissionTests.setValue(fixResult.refactoredTests);
+            }
+            let fixMsgOutput = jQuery('#katafix-fix-reply');
+            fixMsgOutput.text(fixResult.reply ?? "");
         });
     });
 

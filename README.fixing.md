@@ -31,7 +31,7 @@ Katafix is _not_ a tool for creating the final, definitive version of refactored
 
 Creating prompts for LLMs is an art in itself. Depending on the quality of your prompt, the results may range from perfect to helpful to completely useless. The more specific the instructions, the better the chances of receiving a correct response. For example:
 
-- Very specific instructions, such as _"Rename function `mysecretsolution43675357431` to `refsol`"_, almost always work well.
+- Very specific instructions, such as _"Rename function `my_secret_solution_43675357431` to `refsol`"_, almost always work well.
 - General instructions about a specific fix, such as _"Wrap fixed tests with `it(fixed tests)`"_, or _"Implement random tests by generating inputs first, shuffling them, and then looping over them to perform assertions"_, are typically good enough for modern AI models and often yield satisfactory results. However, the generated code may still require manual correction.
 - Vague or overly generic commands, such as _"Make the reference solution faster"_, or convoluted sentences with multiple _"or"_, _"and"_, and _"not"_, are likely to confuse the LLM and result in poor output.
 
@@ -51,7 +51,7 @@ Katafix uses my personal API keys and quota, and I am billed for its usage in re
 
 Feel free to use the tool extensively for its intended purpose, such as fixing large numbers of Codewars kata, even if this generates a significant number of requests. If you encounter usage limits that slow you down, let me know, and I may adjust them for you.
 
-Abuse of the tool—particularly behavior that rapidly exhausts my API tokens—may result in the tool being taken offline for everyone, which would be unfortunate. :(
+Abuse of the tool - particularly behavior that rapidly exhausts my API tokens - may result in the tool being taken offline for everyone, which would be unfortunate. :(
 
 ## How to Get My Katafix Key
 

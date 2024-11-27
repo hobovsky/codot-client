@@ -359,6 +359,13 @@
                 exampleFixes.push('Change classic asserions to `Assert.That`.');
                 exampleFixes.push('Add `[Order]` annotations to test methods.');
                 break;
+            case 'java':
+                exampleFixes.push('Upgrade to JUnit 5 and make test class and test methods package private.');
+                exampleFixes.push('Add `@Order` to test methods and `@TestMethodOrder` to test class.');
+                exampleFixes.push('Add assertion messages showing the input.');
+                exampleFixes.push('Replace usage of `Math.random()` by proper `ThreadLocalRandom` API.');
+                exampleFixes.push('Add `@DisplayName` to test methods.');
+                break;
         }
 
         const examplesDiv = jQuery('#example_fixes_div');

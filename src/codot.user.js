@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.1.0
+// @version      0.1.1
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -403,16 +403,28 @@
             let fixMsgOutput = jQuery('#katafix-fix-reply');
             fixMsgOutput.text('');
 
-            let pathElems     = window.location.pathname.split('/');
-            let kataId        = pathElems[2];
+            let pathElems = window.location.pathname.split('/');
+            let kataId = '(unknown)', kumiteId = '(unknown)';
+
+            if (pathElems[1] == 'kata') {
+                kataId = pathElems[2];
+                const kumiteLink = jQuery('#title > div.view > h4 > a').attr('href');
+                if(kumiteLink)
+                    kumiteId = kumiteLink.split('/')[2];
+            } else if (pathElems[1] == 'kumite') {
+                kumiteId = pathElems[2];
+                kataId = jQuery('#title > div.view > span > a').attr('href').split('/')[2];
+            }
+
             let userCode      = jQuery('#code_snippet_fixture_field .CodeMirror')[0].CodeMirror.getValue();
             let userId        = App.instance.currentUser.id;
             let fixes         = jQuery('#katafix-fixes-input').val();
             // let exampleKataId = jQuery('#example_kata_id').val();
             let exampleCode   = jQuery('#example_test_suite').val();
             let katafixKey    = jQuery('#katafix_key').val();
+            let fixReqData = { kataId, kumiteId, userId, userCode, language, fixes, exampleCode, katafixKey };
+            console.info(`Requesting to fix kata ${kataId} kumite ${kumiteId} in language ${language} by user ${userId}`);
 
-            let fixReqData = { kataId, userId, userCode, language, fixes, exampleCode, katafixKey };
             let noisesTimer = undefined;
             let fixReq = getCodotServiceRequestBase('/fix');
             let { onabort } = fixReq;

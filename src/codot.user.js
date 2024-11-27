@@ -57,8 +57,8 @@
 
     function getCodotServiceRequestBase(route) {
         return {
-            url: 'http://localhost:3000' + route,
-            _url: 'https://codot-server.fly.dev' + route,
+            _url: 'http://localhost:3000' + route,
+            url: 'https://codot-server.fly.dev' + route,
             method: 'POST',
             headers: getCodotServiceHeadersBase(),
             responseType: 'json',
@@ -409,7 +409,7 @@
             let userId        = App.instance.currentUser.id;
             let fixes         = jQuery('#katafix-fixes-input').val();
             // let exampleKataId = jQuery('#example_kata_id').val();
-            let exampleCode   = jQuery('#example_kata_id').val();
+            let exampleCode   = jQuery('#example_test_suite').val();
             let katafixKey    = jQuery('#katafix_key').val();
 
             let fixReqData = { kataId, userId, userCode, language, fixes, exampleCode, katafixKey };

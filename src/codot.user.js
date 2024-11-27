@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.1.1
+// @version      0.1.2
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -9,6 +9,8 @@
 // @match        https://www.codewars.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=codewars.com
 // @grant        GM_xmlhttpRequest
+// @grant        GM_setValue
+// @grant        GM_getValue
 // @grant        GM_addStyle
 // @grant        GM_setClipboard
 // @connect      localhost
@@ -295,6 +297,8 @@
         });
     }
 
+    const codotKatafixKeyKey = "codot.katafix.key";
+
     function setupFixPanel(f) {
 
         let language = jQuery('#languages > dl > dd.is-active').data('language');
@@ -399,6 +403,9 @@
             }
         });
 */
+        const key = GM_getValue(codotKatafixKeyKey);
+        if(key) jQuery('#katafix_key').val(key);
+
         jQuery('#katafix-fix').button().on("click", function() {
             let fixMsgOutput = jQuery('#katafix-fix-reply');
             fixMsgOutput.text('');
@@ -422,6 +429,7 @@
             // let exampleKataId = jQuery('#example_kata_id').val();
             let exampleCode   = jQuery('#example_test_suite').val();
             let katafixKey    = jQuery('#katafix_key').val();
+            GM_setValue(codotKatafixKeyKey, katafixKey);
             let fixReqData = { kataId, kumiteId, userId, userCode, language, fixes, exampleCode, katafixKey };
             console.info(`Requesting to fix kata ${kataId} kumite ${kumiteId} in language ${language} by user ${userId}`);
 

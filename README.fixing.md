@@ -25,6 +25,8 @@ Katafix is _not_ a tool for creating the final, definitive version of refactored
 
 - **Language Support**: Katafix can generally work with any language available on Codewars, but the quality of refactorings depends on how well the LLMs understand the given language. Fixing code in popular languages like Python or JavaScript is usually straightforward. However, support for less common languages like Haxe or Reason may be less reliable. Some languages can also be tricky - for example, LLMs often confuse Crystal with Ruby or PureScript with Haskell.
 
+- **Tracking Changes**: Currently, when a response with the fixed code arrives, the existing code in the editor is replaced with the new code. There is no way to compare the newly generated code with the original state of the fork or with previous versions. The only way to revert a fix is by using `Ctrl+Z` (undo).
+
 ## Instructions Guide
 
 Creating prompts for LLMs is an art in itself. Depending on the quality of your prompt, the results may range from perfect to helpful to completely useless. The more specific the instructions, the better the chances of receiving a correct response. For example:

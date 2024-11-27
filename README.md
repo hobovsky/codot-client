@@ -14,7 +14,7 @@ The Codot frontend is a userscript compatible with [Tampermonkey](https://www.ta
 
 Codot offers three functions to support you with solving Codewars kata: help with failed tests, perform a code review, and run code style tools on your solution.
 
-Additionaly, as a functionality in its beta phase, Codot can perform a review of your kata or translations.
+Additionaly, threre are two functions in beta phase: review of kata and translations, and assistance while refactoring forks.
 
 ### Help with failed tests
 
@@ -42,6 +42,11 @@ Codot can perform reviews of your solution and raise remarks about style, practi
 
 Codot can perform reviews of your kata and translations for conformance with Codewars quality guidelines.
 
+### Fixing forks (beta)
+
+![feature-fix-fork](./images/howto-04.png)
+
+Codot can assist you with introducing fixes to forks. See [Fixing README](README.fixing.md) for details.
 
 ### Accuracy and effectiveness
 

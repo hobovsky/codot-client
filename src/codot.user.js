@@ -332,7 +332,8 @@
              <label for='example_kata_id'>Kata ID or URL:</label>
              <input type='text' id='example_kata_id' placeholder='(not selected)' disabled/> -->
              <label for='example_test_suite'>Use this test suite as an example:</label>
-             <textarea id='example_test_suite' rows='20'></textarea>
+             <textarea id='example_test_suite' rows='20' class='mb-1'></textarea>
+             <p class='mt-1 italic text-xs'>(you can use tests from kata from the <a href='https://www.codewars.com/collections/authoring-examples' target='_blank'>Authoring Examples</a> collection)</p>
           </details>
           <hr class='katafix-form'/>
           <details><summary>Settings</summary>
@@ -370,7 +371,7 @@
         const examplesDiv = jQuery('#example_fixes_div');
         if(exampleFixes.length) {
           for(const fix of exampleFixes) {
-              examplesDiv.append(`<div class='example_fix border-2 border-solid rounded-xl border-gray-200 m-2 p-1'>${fix}</div>`);
+              examplesDiv.append(`<div class='example_fix border-2 border-solid rounded-xl border-gray-200 m-2 p-1 text-sm'>${fix}</div>`);
           }
         } else {
             examplesDiv.text(`(No examples for ${language}, sorry!)`);

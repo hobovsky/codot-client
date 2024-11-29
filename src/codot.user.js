@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.1.1
+// @version      0.1.2
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -358,6 +358,12 @@
             case 'csharp':
                 exampleFixes.push('Change classic asserions to `Assert.That`.');
                 exampleFixes.push('Add `[Order]` annotations to test methods.');
+                break;
+            case 'ruby':
+                exampleFixes.push('Add describe and it sections to the test code.');
+                exampleFixes.push('Make sure that assertions use failure messages which present a call to solution function with values of inputs.');
+                exampleFixes.push('Make random tests a single it with a loop.');
+                exampleFixes.push("Replace `Test.expect(actual, expect)` with `expect(actual).to eq(expect), 'error message'`.");
                 break;
         }
 

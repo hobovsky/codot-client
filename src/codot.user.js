@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.1.2
+// @version      0.1.3
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -9,6 +9,8 @@
 // @match        https://www.codewars.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=codewars.com
 // @grant        GM_xmlhttpRequest
+// @grant        GM_setValue
+// @grant        GM_getValue
 // @grant        GM_addStyle
 // @grant        GM_setClipboard
 // @connect      localhost
@@ -295,6 +297,8 @@
         });
     }
 
+    const codotKatafixStorageKey = "codot.katafix";
+
     function setupFixPanel(f) {
 
         let language = jQuery('#languages > dl > dd.is-active').data('language');
@@ -413,6 +417,13 @@
             }
         });
 */
+        const katafixStored = GM_getValue(codotKatafixStorageKey);
+        if(katafixStored) {
+            jQuery('#katafix_key').val(katafixStored.key || "");
+            jQuery('#example_test_suite').val(katafixStored.exampleTestSuite || "");
+            jQuery('#katafix-fixes-input').val(katafixStored.fixes || "");
+        }
+
         jQuery('#katafix-fix').button().on("click", function() {
             let fixMsgOutput = jQuery('#katafix-fix-reply');
             fixMsgOutput.text('');
@@ -471,6 +482,13 @@
                     f({reply: "I got no response from the server, I think something went wrong."});
                     return;
                 }
+
+                GM_setValue(codotKatafixStorageKey, {
+                    key: jQuery('#katafix_key').val() || "",
+                    exampleTestSuite: jQuery('#example_test_suite').val() || "",
+                    fixes: jQuery('#katafix-fixes-input').val() || ""
+                });
+                
                 f(fixResp);
             };
             GM_xmlhttpRequest(fixReq);

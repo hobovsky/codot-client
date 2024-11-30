@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.1.2
+// @version      0.1.3
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -297,7 +297,7 @@
         });
     }
 
-    const codotKatafixKeyKey = "codot.katafix.key";
+    const codotKatafixStorageKey = "codot.katafix";
 
     function setupFixPanel(f) {
 
@@ -417,8 +417,12 @@
             }
         });
 */
-        const key = GM_getValue(codotKatafixKeyKey);
-        if(key) jQuery('#katafix_key').val(key);
+        const katafixStored = GM_getValue(codotKatafixStorageKey);
+        if(katafixStored) {
+            jQuery('#katafix_key').val(katafixStored.key || "");
+            jQuery('#example_test_suite').val(katafixStored.exampleTestSuite || "");
+            jQuery('#katafix-fixes-input').val(katafixStored.fixes || "");
+        }
 
         jQuery('#katafix-fix').button().on("click", function() {
             let fixMsgOutput = jQuery('#katafix-fix-reply');
@@ -443,7 +447,6 @@
             // let exampleKataId = jQuery('#example_kata_id').val();
             let exampleCode   = jQuery('#example_test_suite').val();
             let katafixKey    = jQuery('#katafix_key').val();
-            GM_setValue(codotKatafixKeyKey, katafixKey);
             let fixReqData = { kataId, kumiteId, userId, userCode, language, fixes, exampleCode, katafixKey };
             console.info(`Requesting to fix kata ${kataId} kumite ${kumiteId} in language ${language} by user ${userId}`);
 
@@ -479,6 +482,13 @@
                     f({reply: "I got no response from the server, I think something went wrong."});
                     return;
                 }
+
+                GM_setValue(codotKatafixStorageKey, {
+                    key: jQuery('#katafix_key').val() || "",
+                    exampleTestSuite: jQuery('#example_test_suite').val() || "",
+                    fixes: jQuery('#katafix-fixes-input').val() || ""
+                });
+                
                 f(fixResp);
             };
             GM_xmlhttpRequest(fixReq);

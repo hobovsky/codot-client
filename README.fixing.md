@@ -39,6 +39,17 @@ Avoid using prompts to request trivial changes that can be easily handled within
 
 A general guideline: if your commands can be easily understood and followed by a person, they can likely be understood by an LLM as well.
 
+### Inline Prompts
+
+A method that has proven to be very effective when working with Katafix is embedding prompts with code comments directly into the refactored code instead of providing them through the Katafix input box. Katafix can be instructed to read these comments and apply the refactoring described within them. For example, the following configuration of the prompt and inline comments can be used:
+
+![inline-prompt-1](images/inline-commands-01.png)
+
+The above prompt will result in the following changes:
+
+![inline-prompt-2](images/inline-commands-02.png)
+
+
 ## How _Not_ to Use Katafix
 
 Katafix uses my personal API keys and quota, and I am billed for its usage in real money. While it is not excessively expensive, overly long requests or large volumes of requests can quickly add up. Therefore, I kindly ask you to:

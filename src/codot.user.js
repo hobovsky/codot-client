@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.1.3
+// @version      0.1.4
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -298,7 +298,25 @@
     }
 
     const codotKatafixStorageKey = "codot.katafix";
+    function getActiveTestEditorId() {
+        const submissionTestsTab = jQuery('#fixture_tab');
+        const exampleTestsTab = jQuery('#example_fixture_tab');
+        const editorId = submissionTestsTab.hasClass('is-active') ? '#code_snippet_fixture_field'
+        : exampleTestsTab.hasClass('is-active') ? '#code_snippet_example_fixture_field'
+        : null;
+        return editorId;
+    }
 
+    function getActiveTestsCode() {
+        const editorId = getActiveTestEditorId();
+        return editorId ? jQuery(`${editorId} .CodeMirror`)[0].CodeMirror.getValue() : '';
+    }
+
+    function setActiveTestsCode(code) {
+        const editorId = getActiveTestEditorId();
+        if(editorId)
+            jQuery(`${editorId} .CodeMirror`)[0].CodeMirror.setValue(code);
+    }
     function setupFixPanel(f) {
 
         let language = jQuery('#languages > dl > dd.is-active').data('language');
@@ -310,7 +328,7 @@
           <table><tr>
           <td><label for='list_apply_to'>Apply to:</label></td>
           <td><select id='list_apply_to'>
-            <option value=''>Submission tests</option>
+            <option value=''>Currently open tests</option>
             <!-- <option value=''>Example tests</option>
             <option value=''>Complete solution</option>
             <option value=''>Solution setup</option>
@@ -441,7 +459,10 @@
                 kataId = jQuery('#title > div.view > span > a').attr('href').split('/')[2];
             }
 
-            let userCode      = jQuery('#code_snippet_fixture_field .CodeMirror')[0].CodeMirror.getValue();
+            let userCode = getActiveTestsCode();
+            if(!userCode)
+                return;
+
             let userId        = App.instance.currentUser.id;
             let fixes         = jQuery('#katafix-fixes-input').val();
             // let exampleKataId = jQuery('#example_kata_id').val();
@@ -836,9 +857,8 @@
         });
 
         setupFixPanel(function(fixResult) {
-            const cmSubmissionTests  = jQuery('#code_snippet_fixture_field .CodeMirror')[0].CodeMirror;
             if(fixResult.refactoredTests) {
-                cmSubmissionTests.setValue(fixResult.refactoredTests);
+                setActiveTestsCode(fixResult.refactoredTests);
             }
             let fixMsgOutput = jQuery('#katafix-fix-reply');
             fixMsgOutput.text(fixResult.reply ?? "");

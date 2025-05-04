@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.1.4
+// @version      0.1.5
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -44,6 +44,9 @@
 `;
     GM_addStyle(css);
 
+    function getJsonResponse(resp) {
+        return resp.status < 400 ? resp.response : JSON.parse(resp.responseText);
+    }
     function fetchAborted() {
         console.info("Fetch aborted.", "info");
     }
@@ -59,8 +62,8 @@
 
     function getCodotServiceRequestBase(route) {
         return {
-            _url: 'http://localhost:3000' + route,
-            url: 'https://codot-server.fly.dev' + route,
+            url: 'http://localhost:3000' + route,
+            _url: 'https://codot-server.fly.dev' + route,
             method: 'POST',
             headers: getCodotServiceHeadersBase(),
             responseType: 'json',
@@ -158,18 +161,19 @@
                 if (resp.readyState !== 4) return;
                 clearInterval(noisesTimer);
 
+                const msgResp = getJsonResponse(resp)?.message ?? "";
+
                 if (resp.status == 429) {
-                    f({reply: `You have to wait.\n${resp.response?.message ?? ""}`});
+                    f({reply: `You have to wait.\n${msgResp}`});
                     return;
                 } else if (resp.status == 413) {
-                    f({reply: `Ooohhh that's way too much for me!\n${resp.response?.message ?? ""}` });
+                    f({reply: `Ooohhh that's way too much for me!\n${msgResp}` });
                     return;
                 } else if (resp.status >= 400) {
-                    f({reply: `Something went wrong!\n${resp.response?.message ?? ""}`});
+                    f({reply: `Something went wrong!\n${msgResp}`});
                     return;
                 }
 
-                const msgResp = resp.response?.message;
                 if(!msgResp) {
                     f({reply: "I got no response from the server, I think something went wrong."});
                     return;
@@ -275,18 +279,19 @@
             lintReq.onreadystatechange = function(resp){
                 if (resp.readyState !== 4) return;
 
+                const jsonResp = getJsonResponse(resp);
                 if (resp.status == 429) {
-                    f({reply: `You have to wait.\n${resp.response?.message ?? ""}`});
+                    f({reply: `You have to wait.\n${jsonResp.message ?? ""}`});
                     return;
                 } else if (resp.status == 413) {
-                    f({reply: `Ooohhh that's way too much for me!\n${resp.response?.message ?? ""}` });
+                    f({reply: `Ooohhh that's way too much for me!\n${jsonResp.message ?? ""}` });
                     return;
                 } else if (resp.status >= 400) {
-                    f({reply: `Something went wrong!\n${resp.response?.message ?? ""}`});
+                    f({reply: `Something went wrong!\n${jsonResp.message ?? ""}`});
                     return;
                 }
 
-                const lintItems = resp.response?.lintItems;
+                const lintItems = jsonResp.lintItems;
                 if(!lintItems) {
                     f({reply: "I got no response from the server, I think something went wrong."});
                     return;
@@ -487,18 +492,18 @@
                 if (resp.readyState !== 4) return;
                 clearInterval(noisesTimer);
 
+                const fixResp = getJsonResponse(resp);
                 if (resp.status == 429) {
-                    f({reply: `You have to wait.\n${resp.response?.message ?? ""}`});
+                    f({reply: `You have to wait.\n${fixResp.message ?? ""}`});
                     return;
                 } else if (resp.status == 413) {
-                    f({reply: `Ooohhh that's way too much for me!\n${resp.response?.message ?? ""}` });
+                    f({reply: `Ooohhh that's way too much for me!\n${fixResp.message ?? ""}` });
                     return;
                 } else if (resp.status >= 400) {
-                    f({reply: `Something went wrong!\n${resp.response?.message ?? ""}`});
+                    f({reply: `Something went wrong!\n${fixResp.message ?? ""}`});
                     return;
                 }
 
-                const fixResp = resp.response;
                 if(!fixResp) {
                     f({reply: "I got no response from the server, I think something went wrong."});
                     return;
@@ -545,18 +550,19 @@
         req.onreadystatechange = function(resp){
             if (resp.readyState !== 4) return;
 
+            let jsonResp = getJsonResponse(resp);
             if (resp.status == 429) {
-                f({reply: `You have to wait.\n${resp.response?.message ?? ""}`});
+                f({reply: `You have to wait.\n${jsonResp.message ?? ""}`});
                 return;
             } else if (resp.status == 413) {
-                f({reply: `Ooohhh that's way too much for me!\n${resp.response?.message ?? ""}` });
+                f({reply: `Ooohhh that's way too much for me!\n${jsonResp.message ?? ""}` });
                 return;
             } else if (resp.status >= 400) {
-                f({reply: `Something went wrong!\n${resp.response?.message ?? ""}`});
+                f({reply: `Something went wrong!\n${jsonResp.message ?? ""}`});
                 return;
             }
 
-            const reviewMessage = resp.response?.review;
+            const reviewMessage = jsonResp.review;
             if(!reviewMessage) {
                 f({reply: "I got no response from the server, I think something went wrong."});
                 return;

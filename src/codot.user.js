@@ -766,7 +766,7 @@
             let helpOutput = jQuery('#codot-help-reply');
             let reply = helpResult.reply;
             helpOutput.html(marked.parse("Here's what I found:\n\n" + reply));
-            helpOutput.after('<button id="help-copy-markdown">Copy as markdown to clipboard</button>');
+            helpOutput.after('<button id="help-copy-markdown">Copy as markdown to clipboard</button><hr/><p>You can visit <code>#help-solve</code> channel of the <a href="https://discord.gg/mSwJWRvkHA" target="_blank">Codewars Discord server</a> for more help!</p>');
             jQuery('#help-copy-markdown').button().on("click", function() {
                 GM_setClipboard(reply, "text");
             });

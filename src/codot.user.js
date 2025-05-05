@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.1.5
+// @version      0.1.6
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -62,8 +62,8 @@
 
     function getCodotServiceRequestBase(route) {
         return {
-            url: 'http://localhost:3000' + route,
-            _url: 'https://codot-server.fly.dev' + route,
+            _url: 'http://localhost:3000' + route,
+            url: 'https://codot-server.fly.dev' + route,
             method: 'POST',
             headers: getCodotServiceHeadersBase(),
             responseType: 'json',
@@ -120,10 +120,12 @@
         jQuery('#codot-pnl-help').append(`
         <p>When your tests fail, I can take a look at your solution and help you with failed tests. Do you want me to try?</p>
         <button id='codot-help'>Yeah, go ahead</button>
+        <div><ul id='codot-help-noises' class='not-prose' style='list-style: none'></ul></div>
         <div id='codot-help-reply'></div>
         `);
         jQuery('#codot-help').button().on("click", function() {
             let helpOutput = jQuery('#codot-help-reply');
+            let helpNoises = jQuery('#codot-help-noises');
             jQuery('#help-copy-markdown').remove();
             helpOutput.text('');
             let runner = App.instance.controller?.outputPanel?.runner;
@@ -160,6 +162,7 @@
             getHelpReq.onreadystatechange = function(resp){
                 if (resp.readyState !== 4) return;
                 clearInterval(noisesTimer);
+                helpNoises.empty();
 
                 const msgResp = getJsonResponse(resp)?.message ?? "";
 
@@ -184,7 +187,7 @@
             //setTimeout(() => { clearInterval(noisesTimer); f({reply: "This is a faked answer"}); }, 10000);
             noisesTimer = setInterval(() => {
                 let noise = noises[Math.random() * noises.length | 0];
-                helpOutput.append(`<p>${noise}</p>`);
+                helpNoises.append(`<li>${noise}</li>`);
             }, 1500);
         });
     }
@@ -193,10 +196,12 @@
         jQuery('#codot-pnl-review').append(`
         <p>I can perform a review of your code. Do you want me to try?</p>
         <button id='codot-review'>Yeah, go ahead</button>
+        <div><ul id='codot-review-noises' class='not-prose' style='list-style: none'></ul></div>
         <div id='codot-review-reply'></div>
         `);
         jQuery('#codot-review').button().on("click", function() {
             let reviewOutput = jQuery('#codot-review-reply')
+            let reviewNoises = jQuery('#codot-review-noises');
             reviewOutput.text('');
 
             let pathElems = window.location.pathname.split('/');
@@ -223,6 +228,7 @@
             getReviewReq.onreadystatechange = function(resp){
                 if (resp.readyState !== 4) return;
                 clearInterval(noisesTimer);
+                reviewNoises.empty();
 
                 if (resp.status == 429) {
                     f({reply: `You have to wait.\n${resp.response?.message ?? ""}`});
@@ -248,7 +254,7 @@
 
             noisesTimer = setInterval(() => {
                 let noise = noises[Math.random() * noises.length | 0];
-                reviewOutput.append(`<p>${noise}</p>`);
+                reviewNoises.append(`<li>${noise}</li>`);
             }, 1500);
         });
     }
@@ -514,7 +520,6 @@
                     exampleTestSuite: jQuery('#example_test_suite').val() || "",
                     fixes: jQuery('#katafix-fixes-input').val() || ""
                 });
-                
                 f(fixResp);
             };
             GM_xmlhttpRequest(fixReq);

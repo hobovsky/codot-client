@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.1.6
+// @version      0.1.7
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -577,6 +577,45 @@
         GM_xmlhttpRequest(req);
     }
 
+    function sendResearchHintRequest(f) {
+
+        let pathElems = window.location.pathname.split('/');
+        let kataId    = pathElems[2];
+        let userId    = App.instance.currentUser.id;
+        let language  = jQuery('#language_dd > span').first().text();
+
+        const req = getCodotServiceRequestBase('/research_hint');
+        req.onerror = function(resp) {
+            let msg = "I am sorry, something bad happened, I am unable to help you.";
+            if(resp?.error)
+                msg += '\n\n' + resp.error;
+            f({reply: msg});
+        };
+        req.data = JSON.stringify({ kataId, language, userId });
+        req.onload = function(resp){
+
+            let jsonResp = getJsonResponse(resp);
+            if (resp.status == 429) {
+                f({reply: `You have to wait.\n${jsonResp.message ?? ""}`});
+                return;
+            } else if (resp.status == 413) {
+                f({reply: `Ooohhh that's way too much for me!\n${jsonResp.message ?? ""}` });
+                return;
+            } else if (resp.status >= 400) {
+                f({reply: `Something went wrong!\n${jsonResp.message ?? ""}`});
+                return;
+            }
+
+            const researchHintMessage = jsonResp.message;
+            if(!researchHintMessage) {
+                f({reply: "I got no response from the server, I think something went wrong."});
+                return;
+            }
+            f({reply: researchHintMessage });
+        };
+        GM_xmlhttpRequest(req);
+    }
+
     function showReviewDialog(fGetSnippets) {
 
         const dlgId = 'dlgKatauthor';
@@ -880,7 +919,6 @@
     $(document).arrive('h1.page-title', {existing: true, onceOnly: false}, function(elem) {
         if(elem.textContent != "Kata Editor")
             return;
-
         setupEditorReview();
     });
 
@@ -888,4 +926,46 @@
         setupForkReview();
     });
 
+    $(document).arrive('#description', {existing: true, onceOnly: false}, function(elem) {
+        let locParts = window.location.href.split('/');
+        if(locParts[3] !== 'kata')
+            return;
+        if(['discuss', 'solutions', 'translations', 'forks'].includes(locParts[5]))
+           return;
+
+        jQuery(elem).parent().after(`
+        <div class="w-full panel bg-ui-section">
+          <h3 class="wf-title-alt">🤖 Help:</h3>
+          <div class="markdown prose max-w-5xl mx-auto overflow-x-auto break-words" id="codot-help-panel">
+            <p>Feeling lost? I can help!
+              <ul>
+                <li><button type="button" id="codot-research-topics">📖 click here</button> if you do not know what topics you need to research to solve this challenge.</li>
+                <li><button type="button" id="codot-confusing-description" disabled>😕 click here</button> if you cannot understand the description.</li>
+              </ul>
+            </p>
+            <div id='codot-research-hint-reply'></div>
+          </div>
+        </div>`);
+        jQuery('#codot-research-topics').button().on("click", function() {
+            this.disabled = true;
+            jQuery(this).button("disable");
+            const button = this;
+            sendResearchHintRequest(function(researchHintResult) {
+                button.disabled = false;
+                jQuery(button).button("enable");
+                let helpOutput = jQuery('#codot-research-hint-reply');
+                let reply = researchHintResult.reply;
+                helpOutput.html(marked.parse("Here's what I found:\n\n" + reply));
+            });
+        });
+        jQuery('#codot-confusing-description').button().on("click", function() {
+            this.disabled = true;
+            jQuery(this).button("disable");
+            const button = this;
+            setTimeout(function() {
+                button.disabled = false;
+                jQuery(button).button("enable");
+            }, 3000);
+        });
+    });
 })();

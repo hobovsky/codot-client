@@ -934,7 +934,9 @@
         let locParts = window.location.href.split('/');
         if(locParts[3] !== 'kata')
             return;
-        if(['discuss', 'solutions', 'translations', 'forks'].includes(locParts[5]))
+        if(!/^[a-fA-F0-9]{24}$/.test(locParts[4]))
+            return;
+        if(['discuss', 'solutions', 'train', 'translations', 'forks'].includes(locParts[5]))
            return;
 
         jQuery(elem).parent().after(`

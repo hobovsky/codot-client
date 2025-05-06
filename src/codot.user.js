@@ -101,7 +101,7 @@
         "Does this code follow best practices?",
         "I'm not entirely convinced by this design.",
         "Are these variables being used correctly?",
-        "I think this code be simplified.",
+        "I think this code could be simplified.",
         "There must a way to refactor this.",
         "Did anyone even test this?",
         "Is this algorithm overly complex?",
@@ -113,7 +113,8 @@
         "Should these variables be more descriptive?",
         "I'm not entirely convinced by the choice of algorithm.",
         "Magic numbers are bad",
-        "Uncle Bob would be proud."
+        "Uncle Bob would be proud.",
+        "This was definitely vibe-coded..."
     ];
 
     function setupHelpPanel(f) {
@@ -375,6 +376,7 @@
           </details>
         </form>
         <hr class='katafix-form'/>
+        <div><ul id='katafix-fix-noises' class='not-prose' style='list-style: none'></ul></div>
         <div id='katafix-fix-reply'></div>
         `);
 
@@ -455,6 +457,7 @@
 
         jQuery('#katafix-fix').button().on("click", function() {
             let fixMsgOutput = jQuery('#katafix-fix-reply');
+            let fixMsgNoises = jQuery('#katafix-fix-noises');
             fixMsgOutput.text('');
 
             let pathElems = window.location.pathname.split('/');
@@ -497,6 +500,7 @@
             fixReq.onreadystatechange = function(resp){
                 if (resp.readyState !== 4) return;
                 clearInterval(noisesTimer);
+                fixMsgNoises.empty();
 
                 const fixResp = getJsonResponse(resp);
                 if (resp.status == 429) {
@@ -526,7 +530,7 @@
             //setTimeout(() => { clearInterval(noisesTimer); f({reply: "This is a faked answer"}); }, 10000);
             noisesTimer = setInterval(() => {
                 let noise = noises[Math.random() * noises.length | 0];
-                fixMsgOutput.append(`<p>${noise}</p>`);
+                fixMsgNoises.append(`<li>${noise}</li>`);
             }, 1500);
         });
     }

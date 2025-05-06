@@ -22,6 +22,12 @@ Additionaly, threre are two functions in beta phase: review of kata and translat
 
 Codot offers his help when you are training on a Codewars challenge and your tests (either sample tests or a submission attempt) end in failure. Upon a request for help, Codot will take some time to think. Please note that the bot's intelligence is artificial, so figuring out the answer may take some time - around 10 seconds of intensive thinking. After a short while, Codot will present you with some hopefully helpful hints.
 
+### Hints for learning and research
+
+![feature-help](./images/howto-05.png)
+
+Codot provides beginners with spoiler-free guidance on what topics to research in order to solve a challenge.
+
 ### Run style check tools
 
 ![feature-lint](./images/howto-01.png)

@@ -955,7 +955,8 @@
                 jQuery(button).button("enable");
                 let helpOutput = jQuery('#codot-research-hint-reply');
                 let reply = researchHintResult.reply;
-                helpOutput.html(marked.parse("Here's what I found:\n\n" + reply));
+                reply += "\n\n----------\n\nPlease note that I'm just a silly bot and might be wrong. If the hints above don't help, feel free to ask for more in the `#help-solve` channel on the [Codewars Discord](https://discord.gg/mSwJWRvkHA).";
+                helpOutput.html(marked.parse(reply));
             });
         });
         jQuery('#codot-confusing-description').button().on("click", function() {

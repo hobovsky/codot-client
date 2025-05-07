@@ -931,12 +931,12 @@
     });
 
     $(document).arrive('#description', {existing: true, onceOnly: false}, function(elem) {
-        let locParts = window.location.href.split('/');
-        if(locParts[3] !== 'kata')
+        let locParts = window.location.pathname.split('/');
+        if(locParts[1] !== 'kata')
             return;
-        if(!/^[a-fA-F0-9]{24}$/.test(locParts[4]))
+        if(!/^[a-fA-F0-9]{24}$/.test(locParts[2]))
             return;
-        if(['discuss', 'solutions', 'train', 'translations', 'forks'].includes(locParts[5]))
+        if(['discuss', 'solutions', 'train', 'translations', 'forks'].includes(locParts[3]))
            return;
 
         jQuery(elem).parent().after(`

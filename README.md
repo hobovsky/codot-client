@@ -8,13 +8,13 @@ Codot is short for **Cod**ewars B**ot**. It's a GPT-powered assistant designed t
 
 ## Installation
 
-The Codot frontend is a userscript compatible with [Tampermonkey](https://www.tampermonkey.net). To install it, you need to first install the [Tampermonkey extension](https://www.tampermonkey.net) for your browser. Then, add the [Codot userscript](https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js) to your Tampermonkey library. Refresh the Codewars page after installing the script.
+Codot is a userscript compatible with [Tampermonkey](https://www.tampermonkey.net). To install it, first add the [Tampermonkey extension](https://www.tampermonkey.net) to your browser. If you encounter issues, check the [Tampermonkey FAQ](https://www.tampermonkey.net/faq.php); some browsers may require [Developer mode](https://www.tampermonkey.net/faq.php#Q209) to run userscripts. Next, install the [Codot userscript](https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js) in Tampermonkey. After installation, refresh the Codewars page.
 
 ## Features
 
-Codot offers three functions to support you with solving Codewars kata: help with failed tests, perform a code review, and run code style tools on your solution.
+Codot offers a set functions to support you with solving Codewars kata, like help with failed tests, perform a code review, run code style tools on your solution, refactor code of tests.
 
-Additionaly, threre are two functions in beta phase: review of kata and translations, and assistance while refactoring forks.
+Additionaly, threre is one function in beta phase: review of kata and translations.
 
 ### Help with failed tests
 
@@ -42,17 +42,17 @@ Codot can run stylechecks and linters on your solution and report code smells, p
 
 Codot can perform reviews of your solution and raise remarks about style, practices, used algorithms, etc.
 
+### Fixing forks
+
+![feature-fix-fork](./images/howto-04.png)
+
+Codot can assist you with introducing fixes to forks. See [Fixing README](README.fixing.md) for details.
+
 ### Reviews of kata and translations (beta)
 
 ![feature-kata-review](./images/howto-03.png)
 
 Codot can perform reviews of your kata and translations for conformance with Codewars quality guidelines.
-
-### Fixing forks (beta)
-
-![feature-fix-fork](./images/howto-04.png)
-
-Codot can assist you with introducing fixes to forks. See [Fixing README](README.fixing.md) for details.
 
 ### Accuracy and effectiveness
 

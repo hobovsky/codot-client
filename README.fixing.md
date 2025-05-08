@@ -1,4 +1,4 @@
-# Fixing Forks with Codot (Beta)
+# Fixing Forks with Codot
 
 Codot uses its AI capabilities to assist you in fixing and refactoring forks.
 
@@ -7,7 +7,7 @@ Codot uses its AI capabilities to assist you in fixing and refactoring forks.
 - Open the fork editor by forking a kata, creating a translation, or editing an existing fork.
 - Read through the code and judge what fixes need to be applied to bring the code up to the current Codewars quality level.
 - Switch to the **"Fix"** tab in the left pane of the page.
-- Enter your instructions into the input box (see [Instructions Guide](#instructions-guide)). You can click on example refactorings below the input box, and they will be appended to your current instructions. You can edit them as necessary: change placeholder names, numeric values, or make instructions more (or less) specific, etc.
+- Enter your instructions into the input box (see [Instructions Guide](#instructions-guide)). You can click on example refactorings below the input box, and they will be appended to your current instructions. You can edit them as necessary: change placeholder values, numeric values, or make instructions more (or less) specific, etc.
 - Optionally, paste a test suite that can be used as an example. You can use tests from one of the [Authoring Examples](https://www.codewars.com/collections/authoring-examples) katas or provide your own.
 - Enter your secret Katafix key to submit a refactoring request. See [How to Get My Katafix Key?](#how-to-get-my-katafix-key) if you need one.
 
@@ -19,7 +19,7 @@ Katafix is _not_ a tool for creating the final, definitive version of refactored
 
 ## What Katafix Can and Cannot Do
 
-- **Refactoring Scope**: Katafix can currently refactor only the submission tests. Support for other snippets, such as example tests, complete solutions, descriptions, and cross-snippet refactorings (e.g., _"move test helpers from preloaded to submission tests"_) is planned but not yet available.
+- **Refactoring Scope**: Katafix can currently refactor only test snippets: submission tests, and example tests. Support for other snippets, such as complete solutions, descriptions, and cross-snippet refactorings (e.g., _"move test helpers from preloaded to submission tests"_) is planned but not yet available.
 
 - **Examples**: Katafix can accept examples, but only if you manually copy them from another kata and paste them into the dedicated input box. Automation of this process is planned but not implemented yet.
 

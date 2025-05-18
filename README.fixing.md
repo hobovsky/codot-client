@@ -1,6 +1,6 @@
-# Fixing Forks with Codot
+# Fixing Forks with Codot and Katafix
 
-Codot uses its AI capabilities to assist you in fixing and refactoring forks.
+Katafix is Codot's companion bot which uses its AI capabilities to assist you in fixing and refactoring forks.
 
 ## How to Use
 

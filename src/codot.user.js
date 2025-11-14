@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.1.8
+// @version      0.1.9
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -657,7 +657,7 @@
                 return resources.map(r => r.text).join(' ');
             }
 
-            return `- ${severityIcons[issue.rule.severity]} **${issue.rule.title}**: ${formatIndent(issue.rule.criteria)}\n`;
+            return `- ${severityIcons[issue.rule.severity]} **${issue.rule.title}**: ${formatIndent(issue.explanation)}\n`;
         }
 
         jQuery('#btnKatauthorReview').button().on("click", function() {
@@ -688,7 +688,7 @@
                         issuesText += "### Commonly occurring issues\n\n" + reply.issues.map(formatIssue).join('') + '\n';
                     }
                     if(reply.extra_issues?.length) {
-                        issuesText += "### Potential problems found by me\n\n_*Note*: the issues below are not an effect of studying any guidelines, and they are purely an effect of evaluation of AI."
+                        issuesText += "### Other potential problems\n\n_*Note*: the issues below are not an effect of studying any guidelines, and they are purely an effect of evaluation of AI."
                             + " They are very likely to be inaccurate or inapplicable. Use your own judgement, and when in doubt, ask the community before fixing!_\n\n"
                             + reply.extra_issues.map(i => `- ${i}`).join('\n') + '\n';
                     }

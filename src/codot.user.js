@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.1.7
+// @version      0.1.8
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -455,7 +455,7 @@
             jQuery('#katafix-fixes-input').val(katafixStored.fixes || "");
         }
 
-        jQuery('#katafix-fix').button().on("click", function() {
+        jQuery('#katafix-fix').button({classes: {"ui-button": "btn"}}).on("click", function() {
             let fixMsgOutput = jQuery('#katafix-fix-reply');
             let fixMsgNoises = jQuery('#katafix-fix-noises');
             fixMsgOutput.text('');
@@ -639,6 +639,27 @@
       </div>
     </div>`);
 
+
+        function formatIssue(issue) {
+
+            const severityIcons = {
+                critical: '☠️',
+                high: '🛑',
+                medium: '⚠️',
+                low: '🪳'
+            };
+
+            function formatIndent(para) {
+                return para.split('\n').map(line => '  ' + line).join('\n');
+            }
+
+            function formatResources(resources) {
+                return resources.map(r => r.text).join(' ');
+            }
+
+            return `- ${severityIcons[issue.rule.severity]} **${issue.rule.title}**: ${formatIndent(issue.rule.criteria)}\n`;
+        }
+
         jQuery('#btnKatauthorReview').button().on("click", function() {
             let helpOutput = jQuery('#katauthorReply');
             helpOutput.text('');
@@ -648,13 +669,37 @@
             if(snippets.problem) {
                 helpOutput.text(snippets.problem);
             } else {
-                helpOutput.text('Please give me some time while I review your code...');
+
+                const btn = jQuery('#btnKatauthorReview');
+                btn.button("option", "disabled", true);
+
+                helpOutput.text('Please give me some time while I review your code. It may take a while...');
                 sendAuthorReviewRequest(snippets, function(e){
+
+                    btn.button("option", "disabled", false);
+
                     const { reply } = e;
-                    helpOutput.html(marked.parse(reply));
+
+                    let issuesText = "";
+                    if(typeof reply === "string") {
+                        issuesText = reply;
+                    }
+                    if(reply.issues?.length) {
+                        issuesText += "### Commonly occurring issues\n\n" + reply.issues.map(formatIssue).join('') + '\n';
+                    }
+                    if(reply.extra_issues?.length) {
+                        issuesText += "### Potential problems found by me\n\n_*Note*: the issues below are not an effect of studying any guidelines, and they are purely an effect of evaluation of AI."
+                            + " They are very likely to be inaccurate or inapplicable. Use your own judgement, and when in doubt, ask the community before fixing!_\n\n"
+                            + reply.extra_issues.map(i => `- ${i}`).join('\n') + '\n';
+                    }
+                    if(reply.resources?.length) {
+                        issuesText += '\n' + reply.resources + '\n';
+                    }
+
+                    helpOutput.html(marked.parse(issuesText));
                     helpOutput.after('<button id="katauthor-copy-markdown">Copy as markdown to clipboard</button>');
                     jQuery('#katauthor-copy-markdown').button().on("click", function() {
-                        GM_setClipboard(reply, "text");
+                        GM_setClipboard(issuesText, "text");
                     });
                 });
                 //setTimeout(() => { clearInterval(noisesTimer); f({reply: "This is a faked answer"}); }, 10000);

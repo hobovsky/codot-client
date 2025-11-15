@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.1.9
+// @version      0.1.10
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -639,15 +639,18 @@
       </div>
     </div>`);
 
+        const severityIcons = {
+            critical: { icon: '☠️', level: 5 },
+            high:     { icon: '🛑', level: 4 },
+            medium:   { icon: '⚠️', level: 3 },
+            low:      { icon: '🪳', level: 2 },
+        };
+
+        function getLevel(issue) {
+            return severityIcons[issue.rule.severity].level;
+        }
 
         function formatIssue(issue) {
-
-            const severityIcons = {
-                critical: '☠️',
-                high: '🛑',
-                medium: '⚠️',
-                low: '🪳'
-            };
 
             function formatIndent(para) {
                 return para.split('\n').map(line => '  ' + line).join('\n');
@@ -657,7 +660,7 @@
                 return resources.map(r => r.text).join(' ');
             }
 
-            return `- ${severityIcons[issue.rule.severity]} **${issue.rule.title}**: ${formatIndent(issue.explanation)}\n`;
+            return `- ${severityIcons[issue.rule.severity].icon} **${issue.rule.title}**: ${formatIndent(issue.explanation)}\n`;
         }
 
         jQuery('#btnKatauthorReview').button().on("click", function() {
@@ -685,7 +688,7 @@
                         issuesText = reply;
                     }
                     if(reply.issues?.length) {
-                        issuesText += "### Commonly occurring issues\n\n" + reply.issues.map(formatIssue).join('') + '\n';
+                        issuesText += "### Commonly occurring issues\n\n" + reply.issues.sort((i1, i2) => getLevel(i2) - getLevel(i1)).map(formatIssue).join('') + '\n';
                     }
                     if(reply.extra_issues?.length) {
                         issuesText += "### Other potential problems\n\n_*Note*: the issues below are not an effect of studying any guidelines, and they are purely an effect of evaluation of AI."

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Codot AIsisstant
 // @namespace    codot.cw.hobovsky
-// @version      0.1.10
+// @version      0.1.11
 // @description  Client facade for the Codot bot.
 // @author       hobovsky
 // @updateURL    https://github.com/hobovsky/codot-client/raw/main/src/codot.user.js
@@ -984,7 +984,7 @@
             return;
         if(!/^[a-fA-F0-9]{24}$/.test(locParts[2]))
             return;
-        if(['discuss', 'solutions', 'train', 'translations', 'forks'].includes(locParts[3]))
+        if(['discuss', 'solutions', 'train', 'translations', 'forks', 'edit'].includes(locParts[3]))
            return;
 
         jQuery(elem).parent().after(`
